@@ -195,7 +195,7 @@ class SentinelNDVI:
         if not product:
             return None
 
-        assets = product.get("assets", {})
+        assets = product["assets"]
         red_href = assets.get("B04", {}).get("href")
         nir_href = assets.get("B08", {}).get("href")
 
@@ -216,7 +216,7 @@ if __name__ == "__main__":
     ndvi_file = SentinelNDVI(
         aoi_geojson="data/area_of_interest.geojson",
         start_date="2026-01-01",
-        end_date="2026-11-16"
+        end_date="2026-11-15"
     ).run()
 
     if ndvi_file:
