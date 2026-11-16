@@ -1,154 +1,24 @@
-"""Command line interface for JaziraAgri-OS.
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
 
-Usage examples:
-    jazira crops
-    jazira recommend --crop wheat --farming rainfed --rain 300
-    jazira diagnose --crop wheat --symptoms yellow_stripes
-    jazira irrigation --crop cotton --stage mid_season --soil-moisture 24 --water-ec 2.5
-"""
+[project]
+name = "jazira-agri-os"
+version = "0.1.0"
+description = "Offline-first agricultural decision support for the Euphrates and Jazira basin"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["Pillow>=10"]
 
-from __future__ import annotations
+[project.scripts]
+jazira = "jazira_agri.cli:main"
 
-import argparse
-import json
-import sys
-from pathlib import Path
+[tool.setuptools]
+package-dir = {"" = "src"}
 
-from . import __version__
-from .advisor.diagnose import diagnose
-from .advisor.recommend import recommend
-from .knowledge.loader import load_crops, load_diseases
+[tool.setuptools.packages.find]
+where = ["src"]
 
-
-def _show(obj: object) -> None:
-    print(json.dumps(obj, ensure_ascii=False, indent=2))
-
-
-def _irrigation_summary(args: argparse.Namespace) -> dict[str, object]:
-    from .intelligence.deficit_irrigation import (
-        Crop,
-        DailyWeather,
-        DeficitIrrigationEngine,
-        FieldConditions,
-        GrowthStage,
-        IrrigationConfig,
-        IrrigationMethod,
-        SoilProperties,
-        SoilTexture,
-    )
-
-    crop_map = {
-        "wheat": Crop.WHEAT,
-        "cotton": Crop.COTTON,
-        "maize": Crop.MAIZE,
-        "barley": Crop.BARLEY,
-    }
-    stage_map = {
-        "initial": GrowthStage.INITIAL,
-        "development": GrowthStage.DEVELOPMENT,
-        "mid_season": GrowthStage.MID_SEASON,
-        "late_season": GrowthStage.LATE_SEASON,
-    }
-
-    try:
-        crop = crop_map[args.crop.lower()]
-    except KeyError as exc:
-        raise ValueError(f"unknown crop '{args.crop}'. expected one of: {', '.join(crop_map)}") from exc
-
-    stage = stage_map.get(args.stage.lower())
-    if stage is None:
-        valid = ", ".join(stage_map)
-        raise ValueError(f"unknown stage '{args.stage}'. valid values: {valid}")
-
-    soil = SoilProperties.from_texture(SoilTexture.CLAY_LOAM)
-    weather = DailyWeather(
-        tmin_c=args.tmin_c,
-        tmax_c=args.tmax_c,
-        wind_speed_ms=args.wind_speed_ms,
-        latitude_deg=args.latitude_deg,
-        elevation_m=args.elevation_m,
-        day_of_year=args.day_of_year,
-        rh_mean_pct=args.rh_mean_pct,
-        solar_radiation_mj_m2=args.solar_radiation_mj_m2,
-        rainfall_mm=args.rainfall_mm,
-    )
-    conditions = FieldConditions(
-        crop=crop,
-        stage=stage,
-        soil_moisture=args.soil_moisture,
-        soil=soil,
-        water_ec_dsm=args.water_ec,
-        stage_progress=args.stage_progress,
-        area_ha=args.area_ha,
-    )
-    result = DeficitIrrigationEngine(
-        IrrigationConfig(
-            method=IrrigationMethod.DRIP if args.method == "drip" else IrrigationMethod.SURFACE,
-            planning_horizon_days=args.planning_horizon_days,
-        )
-    ).recommend(weather, conditions)
-    return result.to_dict()
-
-
-def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(prog="jazira")
-    p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
-    sub = p.add_subparsers(dest="cmd", required=True)
-
-    sub.add_parser("crops", help="list crops")
-    sub.add_parser("symptoms", help="list valid symptom keys")
-
-    r = sub.add_parser("recommend", help="seed, fertilizer and yield advice")
-    r.add_argument("--crop", required=True)
-    r.add_argument("--farming", required=True, choices=["rainfed", "irrigated"])
-    r.add_argument("--region", default="tal_abyad")
-    r.add_argument("--rain", type=float, help="seasonal rain in mm")
-    r.add_argument("--ec", type=float, help="irrigation water EC in dS/m")
-
-    d = sub.add_parser("diagnose", help="diagnose from photo and symptoms")
-    d.add_argument("--crop", required=True)
-    d.add_argument("--photo", type=Path)
-    d.add_argument("--symptoms", default="", help="comma separated keys")
-
-    i = sub.add_parser("irrigation", help="daily irrigation recommendation")
-    i.add_argument("--crop", required=True)
-    i.add_argument("--stage", default="mid_season")
-    i.add_argument("--soil-moisture", type=float, default=25.0)
-    i.add_argument("--water-ec", type=float, default=1.5)
-    i.add_argument("--method", choices=["surface", "drip"], default="surface")
-    i.add_argument("--tmin-c", type=float, default=18.0)
-    i.add_argument("--tmax-c", type=float, default=32.0)
-    i.add_argument("--wind-speed-ms", type=float, default=2.0)
-    i.add_argument("--latitude-deg", type=float, default=36.0)
-    i.add_argument("--elevation-m", type=float, default=220.0)
-    i.add_argument("--day-of-year", type=int, default=180)
-    i.add_argument("--rh-mean-pct", type=float, default=35.0)
-    i.add_argument("--solar-radiation-mj-m2", type=float, default=22.0)
-    i.add_argument("--rainfall-mm", type=float, default=0.0)
-    i.add_argument("--stage-progress", type=float, default=0.5)
-    i.add_argument("--area-ha", type=float, default=1.0)
-    i.add_argument("--planning-horizon-days", type=int, default=1)
-
-    a = p.parse_args(argv)
-    try:
-        if a.cmd == "crops":
-            for key, crop in load_crops().items():
-                print(f"{key}: {crop['name_ar']} / {crop['name_en']}")
-        elif a.cmd == "symptoms":
-            for key, label in load_diseases()["symptoms"].items():
-                print(f"{key}: {label}")
-        elif a.cmd == "recommend":
-            _show(recommend(a.crop, a.farming, a.region, a.rain, a.ec))
-        elif a.cmd == "diagnose":
-            syms = [s.strip() for s in a.symptoms.split(",") if s.strip()]
-            _show(diagnose(a.crop, syms, a.photo))
-        elif a.cmd == "irrigation":
-            _show(_irrigation_summary(a))
-    except (ValueError, FileNotFoundError) as exc:
-        print(f"error: {exc}", file=sys.stderr)
-        return 1
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
