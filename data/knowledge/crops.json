@@ -1,0 +1,60 @@
+{
+  "_warning": "All values here are general starting points with verified=false. Confirm every seed variety, rate and dose with the local agricultural extension service and farmers, then set verified=true.",
+  "wheat": {
+    "name_ar": "قمح", "name_en": "Wheat", "verified": false,
+    "seeds": [
+      {"name": "Sham 6", "name_ar": "شام 6"},
+      {"name": "Sham 8", "name_ar": "شام 8"},
+      {"name": "Sham 10", "name_ar": "شام 10"}
+    ],
+    "seed_rate_kg_per_dunum": {"rainfed": [12, 15], "irrigated": [18, 22]},
+    "ec_threshold_dsm": 6.0,
+    "fertilizers": {
+      "rainfed": [
+        {"name_ar": "فوسفات ثنائي الأمونيوم DAP", "name_en": "DAP 18-46-0", "stage": "at sowing", "dose_kg_per_dunum": [8, 12]},
+        {"name_ar": "يوريا 46%", "name_en": "Urea 46%", "stage": "tillering, only if rain is good", "dose_kg_per_dunum": [5, 10]}
+      ],
+      "irrigated": [
+        {"name_ar": "فوسفات ثنائي الأمونيوم DAP", "name_en": "DAP 18-46-0", "stage": "at sowing", "dose_kg_per_dunum": [15, 20]},
+        {"name_ar": "يوريا 46%", "name_en": "Urea 46%", "stage": "split: tillering and stem elongation", "dose_kg_per_dunum": [20, 30]}
+      ]
+    },
+    "diseases": ["yellow_rust", "brown_rust", "powdery_mildew", "septoria", "loose_smut", "sunn_pest", "aphids"]
+  },
+  "barley": {
+    "name_ar": "شعير", "name_en": "Barley", "verified": false,
+    "seeds": [
+      {"name": "Arabi Abiad", "name_ar": "عربي أبيض"},
+      {"name": "Arabi Aswad", "name_ar": "عربي أسود"}
+    ],
+    "seed_rate_kg_per_dunum": {"rainfed": [10, 14], "irrigated": [15, 20]},
+    "ec_threshold_dsm": 8.0,
+    "fertilizers": {
+      "rainfed": [
+        {"name_ar": "فوسفات ثنائي الأمونيوم DAP", "name_en": "DAP 18-46-0", "stage": "at sowing", "dose_kg_per_dunum": [6, 10]}
+      ],
+      "irrigated": [
+        {"name_ar": "فوسفات ثنائي الأمونيوم DAP", "name_en": "DAP 18-46-0", "stage": "at sowing", "dose_kg_per_dunum": [12, 18]},
+        {"name_ar": "يوريا 46%", "name_en": "Urea 46%", "stage": "tillering", "dose_kg_per_dunum": [15, 22]}
+      ]
+    },
+    "diseases": ["net_blotch", "powdery_mildew", "brown_rust", "aphids"]
+  },
+  "cumin": {
+    "name_ar": "كمون", "name_en": "Cumin", "verified": false,
+    "seeds": [
+      {"name": "Local cumin", "name_ar": "كمون بلدي"}
+    ],
+    "seed_rate_kg_per_dunum": {"rainfed": [2, 4], "irrigated": [2, 4]},
+    "ec_threshold_dsm": 3.0,
+    "fertilizers": {
+      "rainfed": [
+        {"name_ar": "فوسفات ثنائي الأمونيوم DAP", "name_en": "DAP 18-46-0", "stage": "at sowing", "dose_kg_per_dunum": [5, 8]}
+      ],
+      "irrigated": [
+        {"name_ar": "فوسفات ثنائي الأمونيوم DAP", "name_en": "DAP 18-46-0", "stage": "at sowing", "dose_kg_per_dunum": [8, 12]}
+      ]
+    },
+    "diseases": ["fusarium_wilt", "alternaria_blight", "powdery_mildew"]
+  }
+}
