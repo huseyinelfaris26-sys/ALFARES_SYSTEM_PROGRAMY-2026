@@ -1,0 +1,26 @@
+{
+  "hasakah_plains": {
+    "name": "سهل الحسكة",
+    "texture": "loam",
+    "ph": 7.6,
+    "salinity_ec": 1.8,
+    "organic_matter": 1.2,
+    "recommended_crops": ["wheat", "barley", "cotton"]
+  },
+  "raqqa_irrigation": {
+    "name": "الرقة — مناطق الري",
+    "texture": "sandy",
+    "ph": 8.0,
+    "salinity_ec": 3.2,
+    "organic_matter": 0.8,
+    "recommended_crops": ["cotton", "wheat", "vegetables"]
+  },
+  "deir_ez_zor": {
+    "name": "دير الزور — الفرات الأوسط",
+    "texture": "sandy_loam",
+    "ph": 7.9,
+    "salinity_ec": 4.5,
+    "organic_matter": 0.7,
+    "recommended_crops": ["barley", "olive", "salt_tolerant"]
+  }
+}
