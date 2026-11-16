@@ -1,8 +1,6 @@
-import tempfile
-import unittest
-from pathlib import Path
+from __future__ import annotations
 
-from PIL import Image
+import unittest
 
 from jazira_agri.advisor.diagnose import diagnose
 from jazira_agri.advisor.recommend import recommend
@@ -27,6 +25,11 @@ class BasicTests(unittest.TestCase):
         self.assertEqual(out["candidates"][0]["id"], "yellow_rust")
 
     def test_diagnose_photo(self):
+        import tempfile
+        from pathlib import Path
+
+        from PIL import Image
+
         with tempfile.TemporaryDirectory() as tmp:
             p = Path(tmp) / "leaf.png"
             Image.new("RGB", (64, 64), (230, 200, 20)).save(p)
