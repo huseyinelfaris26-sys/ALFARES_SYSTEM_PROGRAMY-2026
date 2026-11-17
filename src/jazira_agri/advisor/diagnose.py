@@ -13,6 +13,7 @@ import time
 from pathlib import Path
 from typing import Any, Protocol
 
+import numpy as np
 from PIL import Image, UnidentifiedImageError
 
 from ..knowledge.loader import data_dir, load_crops, load_diseases
@@ -20,6 +21,8 @@ from ..knowledge.loader import data_dir, load_crops, load_diseases
 ALLOWED_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp"}
 IMAGE_HINT_WEIGHT = 0.5
 MAX_PHOTO_BYTES = 20 * 1024 * 1024
+LOG_ROTATION_MAX_BYTES = 5 * 1024 * 1024
+LOG_ROTATION_BACKUPS = 5
 
 
 class ImageClassifier(Protocol):
@@ -28,33 +31,45 @@ class ImageClassifier(Protocol):
     def predict(self, path: Path) -> dict[str, float]: ...
 
 
+def _rotate_log_if_needed(log_path: Path, max_bytes: int = LOG_ROTATION_MAX_BYTES, backups: int = LOG_ROTATION_BACKUPS) -> None:
+    """Rotate diagnosis logs to keep file sizes bounded."""
+    if not log_path.exists() or log_path.stat().st_size <= max_bytes:
+        return
+    for idx in range(backups - 1, 0, -1):
+        prev = log_path.with_suffix(f".{idx}{log_path.suffix}")
+        next_path = log_path.with_suffix(f".{idx + 1}{log_path.suffix}")
+        if idx == backups - 1:
+            if prev.exists():
+                prev.unlink()
+        if prev.exists():
+            prev.replace(next_path)
+    if log_path.exists():
+        log_path.replace(log_path.with_suffix(f".1{log_path.suffix}"))
+
+
 def analyze_colors(path: Path) -> dict[str, float]:
     """Share of green/yellow/orange/brown/white pixels."""
     try:
         with Image.open(path) as image:
-            image.verify()
-        with Image.open(path) as image:
             rgb = image.convert("RGB")
             rgb.thumbnail((256, 256))
-            data = rgb.convert("HSV").tobytes()
+            hsv = np.asarray(rgb.convert("HSV"), dtype=np.uint8)
     except (UnidentifiedImageError, OSError) as exc:
         raise ValueError(f"cannot read a valid image from {path}") from exc
 
-    counts = {"green": 0, "yellow": 0, "orange": 0, "brown": 0, "white": 0}
-    total = len(data) // 3 or 1
-    for i in range(0, len(data) - 2, 3):
-        hue, saturation, value = data[i], data[i + 1], data[i + 2]
-        degrees = hue * 360 / 255
-        if saturation < 30 and value > 200:
-            counts["white"] += 1
-        elif 70 <= degrees <= 170 and saturation > 60:
-            counts["green"] += 1
-        elif 40 <= degrees < 70 and saturation > 80 and value > 120:
-            counts["yellow"] += 1
-        elif 15 <= degrees < 40 and saturation > 120 and value > 150:
-            counts["orange"] += 1
-        elif 15 <= degrees < 40 and saturation > 60 and value <= 150:
-            counts["brown"] += 1
+    h = hsv[..., 0].astype(np.float32)
+    s = hsv[..., 1].astype(np.float32)
+    v = hsv[..., 2].astype(np.float32)
+    degrees = h * 360.0 / 255.0
+    total = h.size or 1
+
+    counts = {
+        "green": int(((70.0 <= degrees) & (degrees <= 170.0) & (s > 60.0)).sum()),
+        "yellow": int(((40.0 <= degrees) & (degrees < 70.0) & (s > 80.0) & (v > 120.0)).sum()),
+        "orange": int(((15.0 <= degrees) & (degrees < 40.0) & (s > 120.0) & (v > 150.0)).sum()),
+        "brown": int(((15.0 <= degrees) & (degrees < 40.0) & (s > 60.0) & (v <= 150.0)).sum()),
+        "white": int(((s < 30.0) & (v > 200.0)).sum()),
+    }
     return {key: count / total for key, count in counts.items()}
 
 
@@ -161,6 +176,7 @@ def diagnose(
     }
     log = data_dir() / "logs" / "diagnoses.jsonl"
     log.parent.mkdir(parents=True, exist_ok=True)
+    _rotate_log_if_needed(log)
     with log.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps({"t": int(time.time()), **output}, ensure_ascii=False) + "\n")
     return output
