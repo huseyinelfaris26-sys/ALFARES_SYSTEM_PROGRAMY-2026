@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>JaziraAgri-OS</title>
+    <style>
+      body {
+        font-family: Tahoma, Arial, sans-serif;
+        background: linear-gradient(135deg, #f4f9f4, #edf7ef);
+        color: #17381f;
+        margin: 0;
+        padding: 32px;
+      }
+      .card {
+        max-width: 640px;
+        margin: 40px auto;
+        background: white;
+        padding: 28px;
+        border-radius: 18px;
+        box-shadow: 0 12px 30px rgba(17, 94, 49, 0.12);
+      }
+      h1 {
+        margin-top: 0;
+        font-size: 2rem;
+      }
+      label {
+        display: block;
+        margin-top: 12px;
+        font-weight: 600;
+      }
+      input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 10px 12px;
+        margin-top: 8px;
+        border-radius: 10px;
+        border: 1px solid #c7d8ca;
+        font-size: 1rem;
+      }
+      button {
+        margin-top: 20px;
+        width: 100%;
+        padding: 12px;
+        background: #2a7d4c;
+        color: white;
+        border: none;
+        border-radius: 10px;
+        font-size: 1rem;
+        cursor: pointer;
+      }
+      .status {
+        margin-top: 18px;
+        padding: 12px;
+        border-radius: 10px;
+        background: #eef9f0;
+        display: none;
+      }
+      .error { background: #fff0f0; color: #8a2b2b; }
+      .success { background: #effaf2; color: #1d5a34; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>JaziraAgri-OS</h1>
+      <p>نظام زراعي سوري متكامل — تسجيل الدخول والواجهة الأساسية</p>
+
+      <label>اسم المستخدم</label>
+      <input id="username" value="admin" />
+
+      <label>كلمة المرور</label>
+      <input id="password" type="password" value="change-me" />
+
+      <button id="loginBtn">تسجيل الدخول</button>
+
+      <div id="status" class="status"></div>
+    </div>
+
+    <script>
+      const statusEl = document.getElementById('status');
+      const loginBtn = document.getElementById('loginBtn');
+
+      loginBtn.addEventListener('click', async () => {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        try {
+          const response = await fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.detail || 'فشل تسجيل الدخول');
+          }
+
+          statusEl.className = 'status success';
+          statusEl.textContent = 'تم تسجيل الدخول بنجاح. قاعدة المعرفة الحالية: ' + data.knowledge_base;
+          statusEl.style.display = 'block';
+        } catch (err) {
+          statusEl.className = 'status error';
+          statusEl.textContent = err.message;
+          statusEl.style.display = 'block';
+        }
+      });
+    </script>
+  </body>
+</html>

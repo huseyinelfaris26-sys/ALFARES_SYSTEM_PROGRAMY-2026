@@ -1,4 +1,4 @@
-"""Command line: jazira crops | recommend | diagnose | symptoms | config | status."""
+"""Command line: jazira crops | recommend | diagnose | symptoms | config | status | login."""
 from __future__ import annotations
 
 import argparse
@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .advisor.diagnose import diagnose
 from .advisor.recommend import recommend
+from .auth import build_auth_payload
 from .core.configuration import get_settings
 from .knowledge.loader import load_crops, load_diseases
 
@@ -24,6 +25,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("symptoms", help="list valid symptom keys")
     sub.add_parser("config", help="show application configuration")
     sub.add_parser("status", help="show app status")
+    sub.add_parser("login", help="validate configured user and print auth payload")
 
     r = sub.add_parser("recommend", help="seed, fertilizer and yield advice")
     r.add_argument("--crop", required=True)
@@ -36,6 +38,10 @@ def main(argv: list[str] | None = None) -> int:
     d.add_argument("--crop", required=True)
     d.add_argument("--photo", type=Path)
     d.add_argument("--symptoms", default="", help="comma separated keys")
+
+    l = sub.add_parser("login", help="validate configured user and print auth payload")
+    l.add_argument("--username", default=None)
+    l.add_argument("--password", default=None)
 
     a = p.parse_args(argv)
     try:
@@ -63,6 +69,10 @@ def main(argv: list[str] | None = None) -> int:
                     "name": get_settings().db_name,
                 },
             })
+        elif a.cmd == "login":
+            username = a.username or get_settings().username
+            password = a.password or get_settings().password
+            _show(build_auth_payload(username, password))
     except (ValueError, FileNotFoundError, RuntimeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
