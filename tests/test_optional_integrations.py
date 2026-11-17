@@ -25,8 +25,12 @@ class WeatherForecastTests(unittest.TestCase):
         self.assertEqual(get.call_args.kwargs["params"]["forecast_days"], 7)
         self.assertEqual(get.call_args.kwargs["timeout"], 15.0)
 
-    @patch("jazira_agri.weather.forecast.requests.get", side_effect=requests.Timeout)
+    @patch("jazira_agri.weather.forecast.requests.get", side_effect=TimeoutError)
     def test_network_failure_returns_none(self, _get):
+        self.assertIsNone(WeatherForecast(36.5, 39.0).get_7day())
+
+    @patch("jazira_agri.weather.forecast.requests.get", side_effect=requests.Timeout)
+    def test_requests_timeout_returns_none(self, _get):
         self.assertIsNone(WeatherForecast(36.5, 39.0).get_7day())
 
 
