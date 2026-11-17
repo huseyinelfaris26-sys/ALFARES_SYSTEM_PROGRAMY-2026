@@ -1,33 +1,65 @@
-# 🌾 JaziraAgri-OS (نظام الجزيرة الزراعي الذكي)
+# JaziraAgri-OS
 
-**An Open-Source, Offline-First AI Operating System for Precision Agriculture in the Euphrates & Jazira Basin (Raqqa, Al-Hasakah, Deir ez-Zor).**
+## Quick start
 
-[![License: MIT](https://shields.io)](https://opensource.org)
-[![Python 3.11+](https://shields.io)](https://python.org)
-[![Offline-First](https://shields.io)]()
+```bash
+cd /data/data/com.termux/files/home/JaziraAgri-OS
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -e '.[geo,test,api]'
+cp .env.example .env
+python -m pytest -q
+```
 
-## 🌍 نظرة عامة (Overview)
-تم تصميم **JaziraAgri-OS** لمعالجة التحديات الزراعية الفريدة في شمال وشرق سوريا (الرقة، الحسكة، دير الزور، وأريافها وقراها). يجمع النظام بين الذكاء الاصطناعي المحلي (Edge AI)، تحليل صور الأقمار الصناعية المجانية (Sentinel-2)، وإنترنت الأشياء بعيد المدى (LoRa) للعمل بكفاءة تامة حتى في ظل انقطاع الإنترنت والكهرباء وشح المياه.
+## Secure configuration
 
-## 🚀 الميزات الرئيسية (Key Features)
-* **العمل بدون إنترنت (Offline-First):** تخزين ومزامنة ذكية للبيانات للعمل في القرى والأرياف النائية.
-* **الري الناقص الذكي (Deficit Irrigation):** خوارزميات مخصصة لإدارة شح المياه وتذبذب منسوب الفرات والآبار.
-* **مراقبة تملح التربة (Soil Salinity Monitoring):** تحليل طيفي عبر الأقمار الصناعية لاكتشاف التملح مبكراً.
-* **مستشار المحاصيل الاستراتيجية:** نماذج مخصصة للقمح، الشعير، القطن، الذرة، والكمون بناءً على التربة المحلية.
-* **شبكات استشعار بعيدة المدى (LoRaWAN):** تغطية حقول تصل إلى 10 كم بدون أبراج اتصال.
+Create a local `.env` file for application settings without keeping secrets in GitHub. The default values are placeholders and should be updated before deployment.
 
-## 📂 هيكلية المشروع (Architecture)
-راجع مجلد `src/jazira_agri/` للاطلاع على الوحدات البرمجية الأساسية.
-JaziraAgri-OS/
-├── src/jazira_agri/
-│   ├── geo_spatial/   ← تحليل صور Sentinel-2 ومؤشر NDVI
-│   ├── irrigation/    ← جدولة والتحكم بالري الذكي
-│   ├── crops/         ← بيانات المحاصيل وتوقع الإنتاج
-│   ├── soil/          ← تحليل التربة والأسمدة
-│   ├── weather/       ← الطقس والتبخر النتح
-│   ├── intelligence/  ← محركات الذكاء الاصطناعي
-│   └── alerts/        ← تنبيهات الصقيع والآفات
-├── config/            ← إعدادات المناطق
-├── data/              ← قواعد البيانات الجغرافية والزراعية
-├── cache/             ← ملفات مؤقتة
-└── docs/              ← الوثائق والاستخدام
+```bash
+cp .env.example .env
+```
+
+Available variables:
+
+- `APP_NAME`
+- `USERNAME`
+- `PASSWORD`
+- `API_KEY`
+- `DEFAULT_KNOWLEDGE`
+- `DB_HOST`
+- `DB_PORT`
+- `DB_NAME`
+- `DB_USER`
+- `DB_PASSWORD`
+- `LOG_DIR`
+
+## Knowledge bases
+
+JaziraAgri-OS now includes two independent knowledge layers:
+
+- `data/knowledge/crops.json`: general agricultural knowledge.
+- `data/knowledge/syrian_crops.json`: region-specific Syrian crop knowledge, with first priority for wheat, barley, and cotton in Tal Abyad and Raqqa.
+
+These layers remain separate. The Syrian knowledge base is intentionally kept as a draft local reference until validated by a local agronomic source.
+
+## Local recommendation log
+
+Every recommendation can be saved under `data/logs/recommendations/` through the `RecommendationLog` helper in `src/jazira_agri/core/engine.py`. This keeps a trace of the recommendation inputs, confidence, and the eventual outcome.
+
+## FastAPI API
+
+The API application is available in `src/jazira_agri/api/server.py` and is activated with the `api` extra:
+
+```bash
+python -m uvicorn jazira_agri.api.server:app --reload
+```
+
+The service exposes:
+
+- `/health`
+- `/settings`
+- `/`
+
+## PostgreSQL/PostGIS
+
+The project includes optional PostgreSQL/PostGIS dependency groups in `pyproject.toml` for later spatial database use. Keep the database credentials in `.env` and do not commit them to GitHub.

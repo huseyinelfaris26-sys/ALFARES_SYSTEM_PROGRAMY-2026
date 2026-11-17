@@ -1,4 +1,4 @@
-"""Command line: jazira crops | recommend | diagnose | symptoms."""
+"""Command line: jazira crops | recommend | diagnose | symptoms | config | status."""
 from __future__ import annotations
 
 import argparse
@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .advisor.diagnose import diagnose
 from .advisor.recommend import recommend
+from .core.configuration import get_settings
 from .knowledge.loader import load_crops, load_diseases
 
 
@@ -21,6 +22,8 @@ def main(argv: list[str] | None = None) -> int:
 
     sub.add_parser("crops", help="list crops")
     sub.add_parser("symptoms", help="list valid symptom keys")
+    sub.add_parser("config", help="show application configuration")
+    sub.add_parser("status", help="show app status")
 
     r = sub.add_parser("recommend", help="seed, fertilizer and yield advice")
     r.add_argument("--crop", required=True)
@@ -47,7 +50,20 @@ def main(argv: list[str] | None = None) -> int:
         elif a.cmd == "diagnose":
             syms = [s.strip() for s in a.symptoms.split(",") if s.strip()]
             _show(diagnose(a.crop, syms, a.photo))
-    except (ValueError, FileNotFoundError) as exc:
+        elif a.cmd == "config":
+            _show(get_settings().as_dict())
+        elif a.cmd == "status":
+            _show({
+                "app_name": get_settings().app_name,
+                "default_knowledge": get_settings().default_knowledge,
+                "environment": get_settings().app_env,
+                "database": {
+                    "host": get_settings().db_host,
+                    "port": get_settings().db_port,
+                    "name": get_settings().db_name,
+                },
+            })
+    except (ValueError, FileNotFoundError, RuntimeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     return 0
