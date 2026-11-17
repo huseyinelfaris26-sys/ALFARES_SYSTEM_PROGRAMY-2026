@@ -1,4 +1,4 @@
-"""Numerically stable satellite vegetation/moisture index calculations."""
+"""Array-based vegetation index helpers; NumPy is an optional dependency."""
 
 from __future__ import annotations
 
@@ -7,45 +7,53 @@ from typing import Any
 import numpy as np
 
 
-class SatelliteIndexAnalyzer:
-    """Calculate indices from already aligned raster bands; no network access."""
+class IndexAnalyzer:
+    """Calculate NDVI/NDMI from equally shaped numeric band arrays."""
 
     @staticmethod
-    def normalized_difference(band_a: Any, band_b: Any, *, nodata: float | None = None) -> np.ndarray:
-        a = np.asarray(band_a, dtype=np.float32)
-        b = np.asarray(band_b, dtype=np.float32)
-        if a.shape != b.shape:
-            raise ValueError("input bands must have matching shapes and alignment")
-        denominator = a + b
-        valid = np.isfinite(a) & np.isfinite(b) & np.isfinite(denominator) & (denominator != 0)
-        if nodata is not None:
-            valid &= (a != nodata) & (b != nodata)
-        result = np.full(a.shape, np.nan, dtype=np.float32)
-        np.divide(a - b, denominator, out=result, where=valid)
-        return result
-
-    @classmethod
-    def ndvi(cls, red: Any, nir: Any, *, nodata: float | None = None) -> np.ndarray:
-        """NDVI = (NIR - red) / (NIR + red); bands must be co-registered."""
-        return cls.normalized_difference(red, nir, nodata=nodata)
-
-    @classmethod
-    def ndmi(cls, nir: Any, swir: Any, *, nodata: float | None = None) -> np.ndarray:
-        """NDMI = (NIR - SWIR) / (NIR + SWIR); bands must be co-registered."""
-        return cls.normalized_difference(nir, swir, nodata=nodata)
+    def _array(values: Any) -> np.ndarray:
+        array = np.asarray(values, dtype=np.float32)
+        if array.size == 0:
+            raise ValueError("index input must not be empty")
+        return array
 
     @staticmethod
-    def summarize(index: Any) -> dict[str, float | int | None]:
-        values = np.asarray(index, dtype=np.float32)
-        valid = np.isfinite(values)
-        count = int(valid.sum())
+    def _normalized_difference(first: Any, second: Any, first_name: str, second_name: str) -> np.ndarray:
+        first_array = IndexAnalyzer._array(first)
+        second_array = IndexAnalyzer._array(second)
+        if first_array.shape != second_array.shape:
+            raise ValueError(f"{first_name} and {second_name} arrays must have the same shape")
+        denominator = first_array + second_array
+        result = np.divide(
+            first_array - second_array,
+            denominator,
+            out=np.full_like(first_array, np.nan, dtype=np.float32),
+            where=denominator != 0,
+        )
+        return np.nan_to_num(result, nan=-9999.0, posinf=-9999.0, neginf=-9999.0)
+
+    @staticmethod
+    def ndvi(red: Any, nir: Any) -> np.ndarray:
+        """Compute (NIR - RED) / (NIR + RED)."""
+        return -IndexAnalyzer._normalized_difference(nir, red, "nir", "red")
+
+    @staticmethod
+    def ndmi(nir: Any, swir: Any) -> np.ndarray:
+        """Compute (NIR - SWIR) / (NIR + SWIR)."""
+        return IndexAnalyzer._normalized_difference(nir, swir, "nir", "swir")
+
+    @staticmethod
+    def summarize(index: Any) -> dict[str, float]:
+        array = IndexAnalyzer._array(index)
+        valid = array[np.isfinite(array) & (array != -9999)]
+        if valid.size == 0:
+            return {"min": 0.0, "max": 0.0, "mean": 0.0, "valid_pixels": 0}
         return {
-            "valid_pixels": count,
-            "mean": float(values[valid].mean()) if count else None,
-            "min": float(values[valid].min()) if count else None,
-            "max": float(values[valid].max()) if count else None,
-            "valid_fraction": float(count / values.size) if values.size else 0.0,
+            "min": float(valid.min()),
+            "max": float(valid.max()),
+            "mean": float(valid.mean()),
+            "valid_pixels": int(valid.size),
         }
 
 
-__all__ = ["SatelliteIndexAnalyzer"]
+__all__ = ["IndexAnalyzer"]

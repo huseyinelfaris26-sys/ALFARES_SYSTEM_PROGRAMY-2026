@@ -1,47 +1,50 @@
-"""Conservative pest scouting workflow using existing crop symptom knowledge."""
+"""Rule-based symptom advisory using the local disease knowledge base."""
 
 from __future__ import annotations
 
 from typing import Any
 
-from ..advisor.diagnose import diagnose
-from ..knowledge.loader import load_crops, load_diseases
-
-_PEST_IDS = {"aphids", "sunn_pest"}
+from ..knowledge.loader import load_diseases
 
 
 class PestAdvisor:
-    """Rank known insect-pest candidates from reported symptoms; never prescribes pesticides."""
+    """Rank diseases by weighted observed symptoms; not a confirmed diagnosis."""
 
-    @staticmethod
-    def scout(crop: str, symptoms: list[str]) -> dict[str, Any]:
-        crops = load_crops()
-        if crop not in crops:
-            raise ValueError(f"unknown crop '{crop}'. choices: {', '.join(crops)}")
-        normalized = list(dict.fromkeys(symptom.strip() for symptom in symptoms if symptom.strip()))
-        triage = diagnose(crop, normalized)
-        diseases = load_diseases()["diseases"]
-        crop_pests = [pest_id for pest_id in _PEST_IDS if pest_id in crops[crop].get("diseases", [])]
-        candidates = [
-            {
-                "id": item["id"],
-                "name_ar": diseases[item["id"]]["name_ar"],
-                "score": item["score"],
-                "confidence": "preliminary; confirm by field inspection",
-            }
-            for item in triage["candidates"]
-            if item["id"] in crop_pests
-        ]
+    def __init__(self) -> None:
+        knowledge = load_diseases()
+        self.diseases = knowledge["diseases"]
+        self.valid_symptoms = set(knowledge["symptoms"])
+
+    def suggest(self, crop: str, symptoms: list[str] | None = None) -> dict[str, Any]:
+        crop_key = (crop or "").strip().lower()
+        if not crop_key:
+            raise ValueError("crop must be specified")
+        normalized = {item.strip() for item in (symptoms or []) if isinstance(item, str) and item.strip()}
+        unknown = normalized - self.valid_symptoms
+        if unknown:
+            raise ValueError(f"unknown symptoms: {sorted(unknown)}")
+
+        candidates = []
+        for disease_id, disease in self.diseases.items():
+            if crop_key not in disease.get("crops", []):
+                continue
+            matched = [name for name in disease.get("symptoms", {}) if name in normalized]
+            score = sum(disease["symptoms"][name] for name in matched)
+            if score:
+                candidates.append({
+                    "disease": disease_id,
+                    "name_ar": disease.get("name_ar"),
+                    "name_en": disease.get("name_en"),
+                    "score": score,
+                    "matches": matched,
+                    "treatment_ar": disease.get("treatment_ar", ""),
+                })
+        candidates.sort(key=lambda item: (-item["score"], item["disease"]))
         return {
-            "crop": crop,
-            "symptoms_reported": normalized,
-            "pest_candidates": candidates,
-            "next_steps": [
-                "Inspect multiple plants and both leaf surfaces; record affected plants and field location.",
-                "Photograph representative symptoms and check beneficial insects before any control decision.",
-                "Confirm identification and local action thresholds with an agricultural extension specialist.",
-            ],
-            "disclaimer": "Symptom triage is not a verified pest identification. No pesticide or dose is recommended.",
+            "crop": crop_key,
+            "symptoms": sorted(normalized),
+            "matches": candidates[:3],
+            "warning": "هذا فرز أولي للأعراض فقط وليس تشخيصاً مؤكداً. راجع المرشد الزراعي قبل أي معالجة.",
         }
 
 

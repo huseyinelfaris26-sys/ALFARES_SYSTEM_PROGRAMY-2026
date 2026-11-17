@@ -1,6 +1,8 @@
-"""تحليل خصائص التربة وتوصيات الأسمدة"""
-from .soil_analysis import SoilAnalysis
-from .salinity import SalinityChecker
-from .fertilizer import FertilizerAdvisor
+"""Soil analysis and fertilizer guidance."""
 
-__all__ = ["SoilAnalysis", "SalinityChecker", "FertilizerAdvisor"]
+from .analyzer import SoilAnalyzer
+from .fertilizer import FertilizerAdvisor
+from .salinity import SalinityChecker
+from .soil_analysis import SoilAnalysis
+
+__all__ = ["FertilizerAdvisor", "SalinityChecker", "SoilAnalysis", "SoilAnalyzer"]

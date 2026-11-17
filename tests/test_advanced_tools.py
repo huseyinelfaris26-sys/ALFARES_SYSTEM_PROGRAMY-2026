@@ -1,44 +1,48 @@
-from __future__ import annotations
+"""Tests for the agronomy helper modules."""
 
 import math
-import unittest
 
-from jazira_agri.advisor.pest_advisor import PestAdvisor
-from jazira_agri.crops.seed_advisor import SeedAdvisor
-from jazira_agri.geo_spatial.index_analyzer import SatelliteIndexAnalyzer
-from jazira_agri.soil.analyzer import SoilAnalyzer
+import numpy as np
+import pytest
 
-
-class AdvancedToolsTests(unittest.TestCase):
-    def test_soil_analysis_classifies_and_flags_high_salinity(self):
-        result = SoilAnalyzer.analyze(ph=8.0, ec_ds_m=4.2, organic_matter_pct=0.8, sand_pct=75, silt_pct=15, clay_pct=10)
-        self.assertEqual(result["interpretation"]["texture"], "sandy")
-        self.assertEqual(result["interpretation"]["salinity"], "high")
-        self.assertTrue(result["flags"])
-
-    def test_soil_analysis_rejects_incomplete_texture(self):
-        with self.assertRaises(ValueError):
-            SoilAnalyzer.analyze(ph=7, ec_ds_m=1, organic_matter_pct=2, sand_pct=50)
-
-    def test_seed_advice_marks_unverified_data(self):
-        result = SeedAdvisor.advise("wheat", "rainfed")
-        self.assertFalse(result["verified"])
-        self.assertIsNotNone(result["warning"])
-        self.assertEqual(len(result["seed_rate_kg_per_dunum"]), 2)
-
-    def test_ndvi_masks_zero_denominator_and_summarizes(self):
-        result = SatelliteIndexAnalyzer.ndvi([1, 0, 2], [3, 0, 2])
-        self.assertAlmostEqual(float(result[0]), 0.5)
-        self.assertTrue(math.isnan(float(result[1])))
-        summary = SatelliteIndexAnalyzer.summarize(result)
-        self.assertEqual(summary["valid_pixels"], 2)
-        self.assertAlmostEqual(summary["mean"], 0.0)
-
-    def test_pest_triage_does_not_recommend_chemicals(self):
-        result = PestAdvisor.scout("wheat", ["insect_seen", "sticky_leaves"])
-        self.assertTrue(result["pest_candidates"])
-        self.assertIn("pesticide", result["disclaimer"].lower())
+from jazira_agri.advisor import PestAdvisor
+from jazira_agri.crops import CropDatabase, SeedAdvisor
+from jazira_agri.geo_spatial import IndexAnalyzer
+from jazira_agri.soil import FertilizerAdvisor, SalinityChecker, SoilAnalysis, SoilAnalyzer
 
 
-if __name__ == "__main__":
-    unittest.main()
+def test_soil_analyzer_flags_issues_and_accepts_profile():
+    result = SoilAnalyzer.from_profile({"ph": 7.8, "salinity_ec": 4.5, "organic_matter": 0.7, "texture": "sandy"}).evaluate()
+    assert result["status"] == "needs_attention"
+    assert "alkaline_soil" in result["issues"]
+    assert "salinity_risk" in result["issues"]
+
+
+def test_soil_analyzer_rejects_non_finite_values():
+    with pytest.raises(ValueError):
+        SoilAnalyzer(ph=math.nan, salinity_ec=1)
+
+
+def test_seed_advisor_uses_local_crop_data():
+    assert "wheat" in SeedAdvisor.list_crops()
+    result = SeedAdvisor.recommend("wheat")
+    assert result["recommended"][0]["crop"] == "wheat"
+
+
+def test_index_analyzer_calculates_indices_and_handles_zero_denominator():
+    result = IndexAnalyzer.ndvi(np.array([[10, 0]]), np.array([[20, 0]]))
+    assert result[0, 0] == pytest.approx(1 / 3)
+    assert result[0, 1] == -9999
+    assert IndexAnalyzer.summarize(result)["valid_pixels"] == 1
+
+
+def test_pest_advisor_matches_disease_symptoms():
+    result = PestAdvisor().suggest("wheat", ["yellow_stripes", "yellowing"])
+    assert result["matches"][0]["disease"] == "yellow_rust"
+
+
+def test_existing_package_exports_remain_available():
+    assert CropDatabase
+    assert SoilAnalysis
+    assert SalinityChecker
+    assert FertilizerAdvisor
