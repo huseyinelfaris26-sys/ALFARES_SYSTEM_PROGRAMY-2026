@@ -35,7 +35,7 @@ class IndexAnalyzer:
     @staticmethod
     def ndvi(red: Any, nir: Any) -> np.ndarray:
         """Compute (NIR - RED) / (NIR + RED)."""
-        return -IndexAnalyzer._normalized_difference(nir, red, "nir", "red")
+        return IndexAnalyzer._normalized_difference(nir, red, "nir", "red")
 
     @staticmethod
     def ndmi(nir: Any, swir: Any) -> np.ndarray:
