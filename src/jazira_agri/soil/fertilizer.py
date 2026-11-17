@@ -1,13 +1,10 @@
-class FertilizerAdvisor:
-    RECOMMEND = {
-        "wheat": {"N": 120, "P": 60, "K": 60, "unit": "كغم/هكتار"},
-        "cotton": {"N": 150, "P": 80, "K": 50, "unit": "كغم/هكتار"},
-        "olive": {"N": 80, "P": 40, "K": 100, "unit": "كغم/هكتار"}
-    }
+from __future__ import annotations
 
-    def get_advice(self, crop_id, area_m2, n_status="adequate", p_status="adequate"):
-        rec = dict(self.RECOMMEND.get(crop_id, {"N": 80, "P": 40, "K": 40, "unit": "كغم/هكتار"}))
-        factor = area_m2 / 10000
-        if n_status == "low": rec["N"] *= 1.3
-        if p_status == "low": rec["P"] *= 1.4
-        return {k: (round(v * factor, 2) if k != "unit" else v) for k, v in rec.items()}
+from typing import Any
+
+
+def fertilizer_plan(*, crop_id: str, soil_test: dict[str, Any] | None, region_id: str) -> dict[str, Any]:
+    """Return a safe data checklist, never an unsupported fertilizer rate."""
+    if crop_id not in {"wheat", "barley", "cotton"}:
+        raise ValueError("crop_id must be wheat, barley, or cotton")
+    return {"crop": crop_id, "region": region_id, "status": "requires_lab_and_local_review", "soil_test_received": bool(soil_test), "rates": None, "required_evidence": ["soil laboratory results with units and sampling depth", "crop variety and target use", "locally reviewed recommendation source"], "note": "No fertilizer dose is prescribed by this unvalidated module."}
