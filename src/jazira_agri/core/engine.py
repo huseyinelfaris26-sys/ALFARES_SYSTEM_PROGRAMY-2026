@@ -6,16 +6,6 @@ from pathlib import Path
 from typing import Any
 
 
-class PostgresDDL:
-    """PostgreSQL/PostGIS schema template. Apply explicitly with psql or a migration tool."""
-
-    @staticmethod
-    def get_sql() -> str:
-        return (Path(__file__).resolve().parents[3] / "data" / "sql" / "postgres_init.sql").read_text(
-            encoding="utf-8"
-        )
-
-
 class RecommendationStore:
     """Offline/local JSONL recommendation ledger."""
 
@@ -32,14 +22,14 @@ class RecommendationStore:
             stream.write(json.dumps(payload, ensure_ascii=False) + "\n")
         return record_path
 
-    def recent(self, limit: int = 10) -> list[dict[str, Any]]:
-        if limit < 1:
-            return []
-        if not self.history_path.exists():
+    def recent(self, limit: int = 10, *, farm_id: str | None = None) -> list[dict[str, Any]]:
+        if limit < 1 or not self.history_path.exists():
             return []
         records: list[dict[str, Any]] = []
         with self.history_path.open("r", encoding="utf-8") as stream:
             for line in stream:
                 if line.strip():
-                    records.append(json.loads(line))
+                    record = json.loads(line)
+                    if farm_id is None or str(record.get("inputs", {}).get("farm_id")) == str(farm_id):
+                        records.append(record)
         return records[-limit:]

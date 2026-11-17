@@ -7,65 +7,37 @@ from typing import Any
 
 
 class FarmRepository:
-    """Simple JSON-backed store for farms and fields used by the laptop app."""
+    """Offline JSON-backed farm/field store. No synthetic farm records are created."""
 
     def __init__(self, root_dir: str = "data/farms") -> None:
         self.root_dir = Path(root_dir)
         self.root_dir.mkdir(parents=True, exist_ok=True)
         self.farms_path = self.root_dir / "farms.json"
         self.fields_path = self.root_dir / "fields.json"
-        self._ensure_seed_data()
+        self._ensure_files()
 
     def _read_json(self, path: Path) -> dict[str, Any]:
         if not path.exists():
             return {}
         try:
             with path.open("r", encoding="utf-8") as handle:
-                data = json.load(handle)
-        except json.JSONDecodeError:
-            return {}
-        return data if isinstance(data, dict) else {}
+                value = json.load(handle)
+        except json.JSONDecodeError as exc:
+            raise ValueError(f"Invalid local data file: {path}") from exc
+        if not isinstance(value, dict):
+            raise ValueError(f"Expected a JSON object in {path}")
+        return value
 
-    def _write_json(self, path: Path, value: dict[str, Any]) -> None:
-        path.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
+    @staticmethod
+    def _write_json(path: Path, value: dict[str, Any]) -> None:
+        temp_path = path.with_suffix(path.suffix + ".tmp")
+        temp_path.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
+        temp_path.replace(path)
 
-    def _seed_farms(self) -> dict[str, Any]:
-        return {
-            "farm-1": {
-                "id": "farm-1",
-                "name": "حقل تل أبيض 01",
-                "region": "tal_abyad",
-                "owner": "المزارع أ.",
-                "area_ha": 18.5,
-                "notes": "تجربة مبكرة على القمح",
-                "created_at": datetime.now(timezone.utc).isoformat(),
-            }
-        }
-
-    def _seed_fields(self) -> dict[str, Any]:
-        return {
-            "field-1": {
-                "id": "field-1",
-                "farm_id": "farm-1",
-                "name": "قطعة 01",
-                "crop": "wheat",
-                "soil_type": "clay_loam",
-                "irrigation": "irrigated",
-                "area_ha": 6.5,
-                "latitude": 36.7,
-                "longitude": 38.2,
-                "status": "active",
-                "created_at": datetime.now(timezone.utc).isoformat(),
-            }
-        }
-
-    def _ensure_seed_data(self) -> None:
-        farms = self._read_json(self.farms_path)
-        if not farms:
-            self._write_json(self.farms_path, self._seed_farms())
-        fields = self._read_json(self.fields_path)
-        if not fields:
-            self._write_json(self.fields_path, self._seed_fields())
+    def _ensure_files(self) -> None:
+        for path in (self.farms_path, self.fields_path):
+            if not path.exists():
+                self._write_json(path, {})
 
     def list_farms(self) -> list[dict[str, Any]]:
         data = self._read_json(self.farms_path)
@@ -73,13 +45,13 @@ class FarmRepository:
 
     def create_farm(self, payload: dict[str, Any]) -> dict[str, Any]:
         data = self._read_json(self.farms_path)
-        farm_id = payload.get("id") or f"farm-{len(data) + 1}"
+        farm_id = f"farm-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}"
         record = {
             "id": farm_id,
             "name": payload["name"],
             "region": payload.get("region", "tal_abyad"),
             "owner": payload.get("owner", ""),
-            "area_ha": float(payload.get("area_ha", 0.0)),
+            "area_ha": float(payload["area_ha"]),
             "notes": payload.get("notes", ""),
             "created_at": datetime.now(timezone.utc).isoformat(),
         }
@@ -95,19 +67,18 @@ class FarmRepository:
         return [dict(value) for value in sorted(data.values(), key=lambda item: item.get("name", "")) if value.get("farm_id") == farm_id]
 
     def create_field(self, farm_id: str, payload: dict[str, Any]) -> dict[str, Any]:
-        farm = self.get_farm(farm_id)
-        if farm is None:
+        if self.get_farm(farm_id) is None:
             raise KeyError(farm_id)
         data = self._read_json(self.fields_path)
-        field_id = payload.get("id") or f"field-{len(data) + 1}"
+        field_id = f"field-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S%f')}"
         record = {
             "id": field_id,
             "farm_id": farm_id,
             "name": payload["name"],
             "crop": payload.get("crop", "wheat"),
-            "soil_type": payload.get("soil_type", "loam"),
-            "irrigation": payload.get("irrigation", "rainfed"),
-            "area_ha": float(payload.get("area_ha", 0.0)),
+            "soil_type": payload.get("soil_type", ""),
+            "irrigation": payload.get("irrigation", ""),
+            "area_ha": float(payload["area_ha"]),
             "latitude": payload.get("latitude"),
             "longitude": payload.get("longitude"),
             "status": payload.get("status", "active"),
@@ -118,16 +89,28 @@ class FarmRepository:
         return record
 
     def recent_activity(self, limit: int = 5) -> list[dict[str, Any]]:
-        farm_rows = self.list_farms()
-        field_rows = []
-        for farm in farm_rows:
-            field_rows.extend(self.list_fields(farm["id"]))
-        merged = [
-            {"type": "farm", "name": item["name"], "region": item.get("region", ""), "created_at": item.get("created_at", "")}
-            for item in farm_rows
+        farms = self.list_farms()
+        fields = [field for farm in farms for field in self.list_fields(farm["id"])]
+        result = [
+            {"type": "farm", "name": farm["name"], "region": farm.get("region", ""), "created_at": farm.get("created_at", "")}
+            for farm in farms
         ] + [
-            {"type": "field", "name": item["name"], "region": item.get("farm_id", ""), "created_at": item.get("created_at", "")}
-            for item in field_rows
+            {"type": "field", "name": field["name"], "region": field.get("farm_id", ""), "created_at": field.get("created_at", "")}
+            for field in fields
         ]
-        merged.sort(key=lambda item: item.get("created_at", ""), reverse=True)
-        return merged[:limit]
+        return sorted(result, key=lambda item: item.get("created_at", ""), reverse=True)[:limit]
+
+    def report(self, farm_id: str, recommendations: list[dict[str, Any]]) -> dict[str, Any] | None:
+        farm = self.get_farm(farm_id)
+        if farm is None:
+            return None
+        fields = self.list_fields(farm_id)
+        return {
+            "farm": farm,
+            "field_count": len(fields),
+            "field_area_ha": sum(float(item.get("area_ha", 0)) for item in fields),
+            "fields": fields,
+            "recommendations": recommendations,
+            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "caveat": "ملخص إداري للبيانات المسجلة، وليس تقييماً زراعياً أو قياساً ميدانياً.",
+        }
