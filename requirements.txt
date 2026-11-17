@@ -1,8 +1,3 @@
-# Core dependencies plus the optional geospatial pipeline. For AI support, also install .[ai] from pyproject.toml.
-Pillow>=10
-numpy>=1.26
-requests>=2.31
-requests-cache>=1.2
-requests-oauthlib>=1.3
-tqdm>=4.66
-rasterio>=1.3
+# Install the project and its geospatial/weather integrations from the repository root:
+-e .[geo]
+# Optional AI support can be installed separately with: python -m pip install -e '.[ai]'

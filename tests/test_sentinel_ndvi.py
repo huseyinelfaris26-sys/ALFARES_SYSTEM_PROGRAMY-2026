@@ -1,4 +1,4 @@
-"""Regression tests for NDVI grid alignment and NoData handling."""
+"""Regression tests for NDVI geometry, grid alignment, and NoData handling."""
 
 from __future__ import annotations
 
@@ -10,13 +10,14 @@ try:
     import numpy as np
     import rasterio
     from rasterio.transform import from_origin
-    from jazira_agri.geo_spatial.sentinel_ndvi import NDVI_NODATA, SentinelNDVI
+    from jazira_agri.geo_spatial.sentinel_ndvi import NDVI_NODATA, SentinelNDVI, _aoi_bbox
 except ImportError:  # geo dependencies are an optional installation extra
     np = None
     rasterio = None
     from_origin = None
     NDVI_NODATA = -9999.0
     SentinelNDVI = None
+    _aoi_bbox = None
 
 
 @unittest.skipIf(rasterio is None, "install the geo extra to run raster tests")
@@ -62,6 +63,35 @@ class SentinelNDVITests(unittest.TestCase):
             assistant = SentinelNDVI("unused", "2026-01-01", "2026-01-02", root / "cache")
             with self.assertRaisesRegex(ValueError, "matching dimensions"):
                 assistant.compute_ndvi(red, nir)
+
+    def test_polygon_bbox_uses_all_vertices(self):
+        aoi = {
+            "features": [{
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [[[39, 36], [40, 36], [40, 37], [39, 37], [39, 36]]],
+                }
+            }]
+        }
+        self.assertEqual(_aoi_bbox(aoi), [39.0, 36.0, 40.0, 37.0])
+
+    def test_multipolygon_bbox_combines_polygons(self):
+        aoi = {
+            "features": [{
+                "geometry": {
+                    "type": "MultiPolygon",
+                    "coordinates": [
+                        [[[39, 36], [40, 36], [40, 37], [39, 36]]],
+                        [[[41, 35], [42, 35], [42, 36], [41, 35]]],
+                    ],
+                }
+            }]
+        }
+        self.assertEqual(_aoi_bbox(aoi), [39.0, 35.0, 42.0, 37.0])
+
+    def test_rejects_invalid_aoi_coordinates(self):
+        with self.assertRaisesRegex(ValueError, "coordinates"):
+            _aoi_bbox({"features": [{"geometry": {"type": "Polygon", "coordinates": [[[200, 0]]]}}]})
 
 
 if __name__ == "__main__":
