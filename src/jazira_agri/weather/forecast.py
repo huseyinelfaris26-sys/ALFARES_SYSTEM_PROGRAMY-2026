@@ -40,6 +40,6 @@ class WeatherForecast:
             )
             response.raise_for_status()
             payload = response.json()
-        except (requests.RequestException, ValueError):
+        except (requests.RequestException, TimeoutError, ValueError, OSError):
             return None
         return payload if isinstance(payload, dict) and isinstance(payload.get("daily"), dict) else None
