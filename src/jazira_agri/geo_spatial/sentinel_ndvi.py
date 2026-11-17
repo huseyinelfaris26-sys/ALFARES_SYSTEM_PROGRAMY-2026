@@ -16,6 +16,7 @@ import pathlib
 import sys
 from datetime import datetime, timedelta
 from typing import Optional
+
 import numpy as np
 import rasterio
 from rasterio.enums import Resampling
@@ -155,21 +156,23 @@ class SentinelNDVI:
         """حساب مؤشر NDVI من النطاق الأحمر ونطاق الأشعة تحت الحمراء القريبة"""
         ndvi_path = self.cache_dir / "ndvi.tif"
 
-        with rasterio.open(red_path) as src_red, \
-             rasterio.open(nir_path) as src_nir:
-
-            red = src_red.read(1).astype(np.float32)
-            nir = src_nir.read(1).astype(np.float32)
-
-            np.seterr(divide="ignore", invalid="ignore")
-            ndvi = (nir - red) / (nir + red)
-            ndvi[np.isnan(ndvi)] = -9999
-
-            kwargs = src_red.profile
+        with rasterio.open(red_path) as src_red, rasterio.open(nir_path) as src_nir:
+            kwargs = src_red.profile.copy()
             kwargs.update(dtype=rasterio.float32, count=1, nodata=-9999)
 
             with rasterio.open(ndvi_path, "w", **kwargs) as dst:
-                dst.write(ndvi, 1)
+                for _, window in src_red.block_windows(1):
+                    red_block = src_red.read(1, window=window).astype(np.float32)
+                    nir_block = src_nir.read(1, window=window).astype(np.float32)
+                    denom = nir_block + red_block
+                    ndvi_block = np.divide(
+                        nir_block - red_block,
+                        denom,
+                        out=np.full_like(red_block, -9999, dtype=np.float32),
+                        where=denom != 0
+                    )
+                    ndvi_block = np.nan_to_num(ndvi_block, nan=-9999.0, posinf=-9999.0, neginf=-9999.0)
+                    dst.write(ndvi_block, 1, window=window)
 
         _log(f"تم حفظ NDVI في: {ndvi_path}")
         return ndvi_path

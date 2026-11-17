@@ -48,31 +48,27 @@ def recommend(
         cls = classify_rain(region, rain_mm)
         conditions = {"rain_good"} if cls == "rain_good" else {"drought", "drought_best"}
 
-    yields = []
+    yields: list[dict[str, Any]] = []
+    exceptions: list[dict[str, Any]] = []
     for rec in region["yields"]:
-        if rec["crop"] != crop or rec["farming"] != farming or rec["condition"] not in conditions:
+        if rec["crop"] != crop:
             continue
         try:
             factor = _UNIT_TO_KG_PER_DUNUM[rec["unit"]]
         except KeyError as exc:
             raise ValueError(f"unsupported yield unit: {rec.get('unit')!r}") from exc
-        yields.append({
+        entry = {
             "condition": rec["condition"],
             "kg_per_dunum": [rec["low"] * factor, rec["high"] * factor],
             "source": rec["source"],
             "confidence": rec["confidence"],
-        })
-
-    exceptions = []
-    for record in region["yields"]:
-        if record["crop"] == crop and record["condition"] == "exceptional":
-            try:
-                factor = _UNIT_TO_KG_PER_DUNUM[record["unit"]]
-            except KeyError as exc:
-                raise ValueError(f"unsupported yield unit: {record.get('unit')!r}") from exc
+        }
+        if rec["farming"] == farming and rec["condition"] in conditions:
+            yields.append(entry)
+        if rec["condition"] == "exceptional":
             exceptions.append({
-                "kg_per_dunum": [record["low"] * factor, record["high"] * factor],
-                "note": record.get("note", ""),
+                "kg_per_dunum": [rec["low"] * factor, rec["high"] * factor],
+                "note": rec.get("note", ""),
             })
 
     warnings: list[str] = []

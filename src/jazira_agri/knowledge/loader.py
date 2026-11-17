@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +18,7 @@ def data_dir() -> Path:
     return Path(__file__).resolve().parents[3] / "data"
 
 
+@lru_cache(maxsize=None)
 def load_json(relative: str) -> dict[str, Any]:
     """Load a JSON object confined to the configured data directory."""
     root = data_dir().resolve()
