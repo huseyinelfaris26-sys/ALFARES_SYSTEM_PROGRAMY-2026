@@ -1,0 +1,71 @@
+{
+  "_meta": {
+    "schema_version": 1,
+    "knowledge_base_id": "syrian_priority_regions",
+    "status": "draft_needs_local_validation",
+    "verified": false,
+    "policy": "These are region records, not farm-level measurements. Add boundaries, weather series, and soil observations only with source, date, method, and uncertainty.",
+    "last_reviewed": null
+  },
+  "tal_abyad": {
+    "region_id": "tal_abyad",
+    "name_ar": "تل أبيض",
+    "name_en": "Tal Abyad",
+    "governorate_ar": "الرقة",
+    "priority": 1,
+    "geometry": null,
+    "administrative_boundary_source": null,
+    "local_weather": {
+      "status": "not_loaded",
+      "station_ids": [],
+      "rainfall_series": null,
+      "temperature_series": null,
+      "source_ids": []
+    },
+    "soil": {
+      "status": "not_sampled_or_imported",
+      "field_samples": [],
+      "soilgrids_reference": {
+        "product": "SoilGrids",
+        "nominal_resolution_m": 250,
+        "standard_depth_intervals_cm": [[0, 5], [5, 15], [15, 30], [30, 60], [60, 100], [100, 200]],
+        "properties": [],
+        "data_values_imported": false,
+        "source_url": "https://docs.isric.org/globaldata/soilgrids/",
+        "caveat": "Global model estimates are contextual layers, not a substitute for field sampling or laboratory analysis."
+      }
+    },
+    "priority_crops": ["wheat", "barley", "cotton"],
+    "known_local_records": []
+  },
+  "raqqa": {
+    "region_id": "raqqa",
+    "name_ar": "الرقة",
+    "name_en": "Raqqa",
+    "priority": 2,
+    "geometry": null,
+    "administrative_boundary_source": null,
+    "local_weather": {
+      "status": "not_loaded",
+      "station_ids": [],
+      "rainfall_series": null,
+      "temperature_series": null,
+      "source_ids": []
+    },
+    "soil": {
+      "status": "not_sampled_or_imported",
+      "field_samples": [],
+      "soilgrids_reference": {
+        "product": "SoilGrids",
+        "nominal_resolution_m": 250,
+        "standard_depth_intervals_cm": [[0, 5], [5, 15], [15, 30], [30, 60], [60, 100], [100, 200]],
+        "properties": [],
+        "data_values_imported": false,
+        "source_url": "https://docs.isric.org/globaldata/soilgrids/",
+        "caveat": "Global model estimates are contextual layers, not a substitute for field sampling or laboratory analysis."
+      }
+    },
+    "priority_crops": ["wheat", "barley", "cotton"],
+    "known_local_records": []
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "_meta": {
+    "schema_version": 1,
+    "knowledge_base_id": "syrian_specialized_crops",
+    "name_ar": "قاعدة المعرفة المتخصصة بمحاصيل الجزيرة السورية",
+    "language": "ar",
+    "status": "draft_needs_local_validation",
+    "verified": false,
+    "priority": ["wheat", "barley", "cotton"],
+    "priority_regions": ["tal_abyad", "raqqa"],
+    "separation": "This dataset is independent from data/knowledge/crops.json. Do not merge or silently fall back to general crop values.",
+    "policy": "Unknown local values remain null or empty until supported by a traceable source and reviewed by a qualified local agronomist.",
+    "last_reviewed": null
+  },
+  "wheat": {
+    "crop_id": "wheat",
+    "name_ar": "قمح",
+    "name_en": "Wheat",
+    "priority": 1,
+    "knowledge_status": "needs_local_validation",
+    "types": ["durum", "bread_or_soft"],
+    "varieties": {
+      "status": "needs_local_validation",
+      "items": [],
+      "required_fields": ["name", "wheat_type", "release_or_source", "local_adaptation_evidence", "source_id"]
+    },
+    "growth_stages": [
+      {"id": "sowing", "name_ar": "الزراعة", "calendar_dates": null},
+      {"id": "emergence", "name_ar": "الإنبات", "calendar_dates": null},
+      {"id": "tillering", "name_ar": "التفريع", "calendar_dates": null},
+      {"id": "stem_elongation", "name_ar": "الاستطالة", "calendar_dates": null},
+      {"id": "heading", "name_ar": "طرد السنابل", "calendar_dates": null},
+      {"id": "flowering", "name_ar": "الإزهار", "calendar_dates": null},
+      {"id": "grain_filling", "name_ar": "امتلاء الحبوب", "calendar_dates": null},
+      {"id": "maturity", "name_ar": "النضج", "calendar_dates": null}
+    ],
+    "knowledge_topics": ["sowing_window_by_region_and_rainfall", "water_by_growth_stage", "fertilizer_by_soil_test_and_stage", "weeds", "diseases_and_pests", "yield_components", "yield_t_per_ha"],
+    "disease_ids": ["wheat_yellow_rust", "wheat_brown_rust", "wheat_black_rust", "wheat_smut", "sunn_pest", "aphids"],
+    "yield_components": ["spikes_per_m2", "grains_per_spike", "thousand_grain_weight_g"],
+    "recommendation_inputs": ["region_id", "variety_id", "sowing_date", "soil_texture", "soil_depth", "soil_test", "seasonal_rain_mm", "rain_distribution", "irrigation_availability", "growth_stage", "observed_crop_condition"],
+    "recommendation_policy": "No fixed local sowing dates, fertilizer rates, water amounts, or yield values are published until locally sourced and reviewed."
+  },
+  "barley": {
+    "crop_id": "barley",
+    "name_ar": "شعير",
+    "name_en": "Barley",
+    "priority": 2,
+    "knowledge_status": "needs_local_validation",
+    "types": ["two_row", "six_row", "feed", "malting"],
+    "varieties": {
+      "status": "needs_local_validation",
+      "items": [],
+      "required_fields": ["name", "use", "drought_evidence", "salinity_evidence", "local_adaptation_evidence", "source_id"]
+    },
+    "growth_stages": [
+      {"id": "sowing", "name_ar": "الزراعة", "calendar_dates": null},
+      {"id": "emergence", "name_ar": "الإنبات", "calendar_dates": null},
+      {"id": "tillering", "name_ar": "التفريع", "calendar_dates": null},
+      {"id": "stem_elongation", "name_ar": "الاستطالة", "calendar_dates": null},
+      {"id": "heading", "name_ar": "طرد السنابل", "calendar_dates": null},
+      {"id": "grain_filling", "name_ar": "امتلاء الحبوب", "calendar_dates": null},
+      {"id": "maturity", "name_ar": "النضج", "calendar_dates": null}
+    ],
+    "knowledge_topics": ["rainfed_variety_suitability", "drought_and_salinity_response", "sowing_and_harvest_window", "water_and_fertilizer_by_stage", "diseases", "yield_and_grain_quality"],
+    "disease_ids": ["barley_net_blotch", "barley_rust", "barley_smut", "barley_spot_blotch", "aphids"],
+    "recommendation_inputs": ["region_id", "variety_id", "sowing_date", "soil_texture", "soil_depth", "soil_test", "seasonal_rain_mm", "rain_distribution", "growth_stage", "intended_use", "observed_crop_condition"],
+    "recommendation_policy": "Drought and salinity tolerance must be tied to a named variety and evidence; no blanket tolerance rating is asserted."
+  },
+  "cotton": {
+    "crop_id": "cotton",
+    "name_ar": "قطن",
+    "name_en": "Cotton",
+    "priority": 3,
+    "knowledge_status": "needs_local_validation",
+    "types": ["upland"],
+    "varieties": {
+      "status": "needs_local_validation",
+      "items": [],
+      "required_fields": ["name", "maturity_group", "fiber_traits", "local_adaptation_evidence", "source_id"]
+    },
+    "growth_stages": [
+      {"id": "sowing", "name_ar": "الزراعة", "calendar_dates": null},
+      {"id": "emergence", "name_ar": "الإنبات", "calendar_dates": null},
+      {"id": "branching", "name_ar": "التفريع", "calendar_dates": null},
+      {"id": "flowering", "name_ar": "الإزهار", "calendar_dates": null},
+      {"id": "boll_formation", "name_ar": "تكوين اللوز", "calendar_dates": null},
+      {"id": "boll_opening", "name_ar": "تفتح اللوز", "calendar_dates": null},
+      {"id": "maturity", "name_ar": "النضج", "calendar_dates": null}
+    ],
+    "knowledge_topics": ["varieties_and_fiber_quality", "sowing_and_establishment", "irrigation_by_growth_stage", "bollworms_and_other_insects", "wilt_and_fungal_diseases", "nitrogen_and_potassium_by_soil_test", "yield_and_quality"],
+    "disease_ids": ["cotton_bollworm", "cotton_wilt_fusarium", "cotton_wilt_verticillium", "cotton_root_rot", "cotton_aphids"],
+    "recommendation_inputs": ["region_id", "variety_id", "sowing_date", "soil_texture", "soil_depth", "soil_test", "irrigation_water_and_availability", "growth_stage", "pest_observations", "observed_crop_condition"],
+    "recommendation_policy": "Cotton is treated as an irrigated crop in this initial scope. Local varieties, irrigation schedules, fertilizer rates, pest thresholds, and yield values require reviewed evidence."
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "_meta": {
+    "schema_version": 1,
+    "knowledge_base_id": "syrian_crop_health",
+    "status": "draft_needs_local_validation",
+    "verified": false,
+    "policy": "Symptom descriptions, local occurrence, thresholds, and control options require local diagnostic and extension review. This catalog is not a diagnosis or pesticide prescription.",
+    "last_reviewed": null
+  },
+  "wheat_yellow_rust": {"name_ar": "الصدأ الأصفر في القمح", "crop_id": "wheat", "category": "fungal_disease", "local_occurrence": "needs_local_validation", "symptoms": [], "risk_factors": [], "monitoring_protocol": null, "control_guidance": null, "source_ids": []},
+  "wheat_brown_rust": {"name_ar": "الصدأ البني في القمح", "crop_id": "wheat", "category": "fungal_disease", "local_occurrence": "needs_local_validation", "symptoms": [], "risk_factors": [], "monitoring_protocol": null, "control_guidance": null, "source_ids": []},
+  "wheat_black_rust": {"name_ar": "الصدأ الأسود/الساق في القمح", "crop_id": "wheat", "category": "fungal_disease", "local_occurrence": "needs_local_validation", "symptoms": [], "risk_factors": [], "monitoring_protocol": null, "control_guidance": null, "source_ids": []},
+  "wheat_smut": {"name_ar": "أمراض التفحم في القمح", "crop_id": "wheat", "category": "fungal_disease", "local_occurrence": "needs_local_validation", "symptoms": [], "risk_factors": [], "monitoring_protocol": null, "control_guidance": null, "source_ids": []},
+  "sunn_pest": {"name_ar": "حشرة السونة", "crop_id": "wheat", "category": "insect_pest", "local_occurrence": "needs_local_validation", "symptoms": [], "risk_factors": [], "monitoring_protocol": null, "economic_threshold": null, "control_guidance": null, "source_ids": []},
+  "aphids": {"name_ar": "حشرات المن", "crop_ids": ["wheat", "barley", "cotton"], "category": "insect_pest", "local_occurrence": "needs_local_validation", "symptoms": [], "risk_factors": [], "monitoring_protocol": null, "economic_threshold": null, "control_guidance": null, "source_ids": []},
+  "barley_net_blotch": {"name_ar": "التبقع الشبكي في الشعير", "crop_id": "barley", "category": "fungal_disease", "local_occurrence": "needs_local_validation", "symptoms": [], "risk_factors": [], "monitoring_protocol": null, "control_guidance": null, "source_ids": []},
+  "barley_rust": {"name_ar": "أصداء الشعير", "crop_id": "barley", "category": "fungal_disease", "local_occurrence": "needs_local_validation", "symptoms": [], "risk_factors": [], "monitoring_protocol": null, "control_guidance": null, "source_ids": []},
+  "barley_smut": {"name_ar": "أمراض التفحم في الشعير", "crop_id": "barley", "category": "fungal_disease", "local_occurrence": "needs_local_validation", "symptoms": [], "risk_factors": [], "monitoring_protocol": null, "control_guidance": null, "source_ids": []},
+  "barley_spot_blotch": {"name_ar": "تبقعات أوراق الشعير", "crop_id": "barley", "category": "fungal_disease", "local_occurrence": "needs_local_validation", "symptoms": [], "risk_factors": [], "monitoring_protocol": null, "control_guidance": null, "source_ids": []},
+  "cotton_bollworm": {"name_ar": "ديدان لوز القطن", "crop_id": "cotton", "category": "insect_pest", "local_occurrence": "needs_local_validation", "symptoms": [], "risk_factors": [], "monitoring_protocol": null, "economic_threshold": null, "control_guidance": null, "source_ids": []},
+  "cotton_wilt_fusarium": {"name_ar": "ذبول الفيوزاريوم في القطن", "crop_id": "cotton", "category": "fungal_disease", "local_occurrence": "needs_local_validation", "symptoms": [], "risk_factors": [], "monitoring_protocol": null, "control_guidance": null, "source_ids": []},
+  "cotton_wilt_verticillium": {"name_ar": "ذبول الفيرتيسيليوم في القطن", "crop_id": "cotton", "category": "fungal_disease", "local_occurrence": "needs_local_validation", "symptoms": [], "risk_factors": [], "monitoring_protocol": null, "control_guidance": null, "source_ids": []},
+  "cotton_root_rot": {"name_ar": "أعفان جذور القطن", "crop_id": "cotton", "category": "fungal_disease", "local_occurrence": "needs_local_validation", "symptoms": [], "risk_factors": [], "monitoring_protocol": null, "control_guidance": null, "source_ids": []}
+}

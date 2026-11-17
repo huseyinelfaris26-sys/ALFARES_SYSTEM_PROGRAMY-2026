@@ -35,17 +35,38 @@ def load_json(relative: str) -> dict[str, Any]:
     return value
 
 
+def _without_metadata(value: dict[str, Any]) -> dict[str, Any]:
+    """Return data records while keeping metadata inside each source JSON file."""
+    return {key: record for key, record in value.items() if not key.startswith("_")}
+
+
 def load_crops() -> dict[str, Any]:
-    crops = load_json("knowledge/crops.json")
-    return {key: value for key, value in crops.items() if not key.startswith("_")}
+    """Load the existing general agricultural crop knowledge (backward compatible)."""
+    return _without_metadata(load_json("knowledge/crops.json"))
 
 
 def load_diseases() -> dict[str, Any]:
+    """Load the existing general crop-health knowledge."""
     return load_json("knowledge/diseases.json")
 
 
 def load_region(name: str) -> dict[str, Any]:
-    """Load one named region, rejecting path separators and traversal attempts."""
+    """Load one general region, rejecting path separators and traversal attempts."""
     if not name or Path(name).name != name or name in {".", ".."}:
         raise ValueError("region must be a simple region identifier")
     return load_json(f"regions/{name}.json")
+
+
+def load_syrian_crops() -> dict[str, Any]:
+    """Load the independent Syrian-priority crop records, without changing load_crops()."""
+    return _without_metadata(load_json("knowledge/syrian_crops.json"))
+
+
+def load_syrian_regions() -> dict[str, Any]:
+    """Load Syrian priority-region records (Tal Abyad and Raqqa initially)."""
+    return _without_metadata(load_json("knowledge/syrian_regions.json"))
+
+
+def load_syrian_diseases() -> dict[str, Any]:
+    """Load the independent Syrian crop-health catalog."""
+    return _without_metadata(load_json("knowledge/syrian_diseases.json"))
