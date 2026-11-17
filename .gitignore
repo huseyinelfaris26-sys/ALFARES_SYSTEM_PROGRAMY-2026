@@ -1,5 +1,10 @@
+# Keep credentials, local environments, and generated farmer data out of Git.
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
 data/photos/
 data/logs/
-__pycache__/
-*.egg-info/
-.venv/

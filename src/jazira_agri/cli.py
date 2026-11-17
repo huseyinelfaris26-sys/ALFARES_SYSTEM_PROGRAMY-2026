@@ -1,14 +1,14 @@
-"""Command line: jazira crops | recommend | diagnose | symptoms | config | status | login."""
 from __future__ import annotations
 
 import argparse
+import getpass
 import json
 import sys
 from pathlib import Path
 
 from .advisor.diagnose import diagnose
 from .advisor.recommend import recommend
-from .auth import build_auth_payload
+from .auth import validate_credentials
 from .core.configuration import get_settings
 from .knowledge.loader import load_crops, load_diseases
 
@@ -18,61 +18,53 @@ def _show(obj: object) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    p = argparse.ArgumentParser(prog="jazira")
-    sub = p.add_subparsers(dest="cmd", required=True)
-
+    parser = argparse.ArgumentParser(prog="jazira")
+    sub = parser.add_subparsers(dest="cmd", required=True)
     sub.add_parser("crops", help="list crops")
     sub.add_parser("symptoms", help="list valid symptom keys")
-    sub.add_parser("config", help="show application configuration")
-    sub.add_parser("status", help="show app status")
-    sub.add_parser("login", help="validate configured user and print auth payload")
+    sub.add_parser("config", help="show redacted application configuration")
+    sub.add_parser("status", help="show application and database configuration status")
+    sub.add_parser("login", help="check credentials interactively")
 
-    r = sub.add_parser("recommend", help="seed, fertilizer and yield advice")
-    r.add_argument("--crop", required=True)
-    r.add_argument("--farming", required=True, choices=["rainfed", "irrigated"])
-    r.add_argument("--region", default="tal_abyad")
-    r.add_argument("--rain", type=float, help="seasonal rain in mm")
-    r.add_argument("--ec", type=float, help="irrigation water EC in dS/m")
+    rec = sub.add_parser("recommend", help="seed, fertilizer and expected-yield advice")
+    rec.add_argument("--crop", required=True)
+    rec.add_argument("--farming", required=True, choices=["rainfed", "irrigated"])
+    rec.add_argument("--region", default="tal_abyad")
+    rec.add_argument("--rain", type=float)
+    rec.add_argument("--ec", type=float)
 
-    d = sub.add_parser("diagnose", help="diagnose from photo and symptoms")
-    d.add_argument("--crop", required=True)
-    d.add_argument("--photo", type=Path)
-    d.add_argument("--symptoms", default="", help="comma separated keys")
+    diag = sub.add_parser("diagnose", help="diagnose from photo and symptoms")
+    diag.add_argument("--crop", required=True)
+    diag.add_argument("--photo", type=Path)
+    diag.add_argument("--symptoms", default="")
 
-    l = sub.add_parser("login", help="validate configured user and print auth payload")
-    l.add_argument("--username", default=None)
-    l.add_argument("--password", default=None)
-
-    a = p.parse_args(argv)
+    args = parser.parse_args(argv)
     try:
-        if a.cmd == "crops":
-            for key, c in load_crops().items():
-                print(f"{key}: {c['name_ar']} / {c['name_en']}")
-        elif a.cmd == "symptoms":
+        if args.cmd == "crops":
+            for key, crop in load_crops().items():
+                print(f"{key}: {crop['name_ar']} / {crop['name_en']}")
+        elif args.cmd == "symptoms":
             for key, label in load_diseases()["symptoms"].items():
                 print(f"{key}: {label}")
-        elif a.cmd == "recommend":
-            _show(recommend(a.crop, a.farming, a.region, a.rain, a.ec))
-        elif a.cmd == "diagnose":
-            syms = [s.strip() for s in a.symptoms.split(",") if s.strip()]
-            _show(diagnose(a.crop, syms, a.photo))
-        elif a.cmd == "config":
+        elif args.cmd == "recommend":
+            _show(recommend(args.crop, args.farming, args.region, args.rain, args.ec))
+        elif args.cmd == "diagnose":
+            symptoms = [item.strip() for item in args.symptoms.split(",") if item.strip()]
+            _show(diagnose(args.crop, symptoms, args.photo))
+        elif args.cmd == "config":
             _show(get_settings().as_dict())
-        elif a.cmd == "status":
-            _show({
-                "app_name": get_settings().app_name,
-                "default_knowledge": get_settings().default_knowledge,
-                "environment": get_settings().app_env,
-                "database": {
-                    "host": get_settings().db_host,
-                    "port": get_settings().db_port,
-                    "name": get_settings().db_name,
-                },
-            })
-        elif a.cmd == "login":
-            username = a.username or get_settings().username
-            password = a.password or get_settings().password
-            _show(build_auth_payload(username, password))
+        elif args.cmd == "status":
+            settings = get_settings()
+            _show({"app": settings.app_name, "environment": settings.app_env,
+                   "default_knowledge": settings.default_knowledge,
+                   "database_configured": bool(settings.database_url or settings.db_password)})
+        elif args.cmd == "login":
+            username = input("Username: ").strip()
+            password = getpass.getpass("Password: ")
+            if not validate_credentials(username, password):
+                print("Authentication failed", file=sys.stderr)
+                return 1
+            print("Authenticated")
     except (ValueError, FileNotFoundError, RuntimeError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
