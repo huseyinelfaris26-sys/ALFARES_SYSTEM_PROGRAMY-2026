@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#17643b" />
     <title>JaziraAgri-OS | نظام الجزيرة الزراعي</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
     <style>
       :root { color-scheme: light; font-family: Tahoma, Arial, sans-serif; background: #f3f7f2; color: #17381f; }
       * { box-sizing: border-box; }
@@ -24,6 +25,7 @@
       .muted { color:#58705d; } .error { color:#a32525; } .hidden { display:none!important; }
       table { width:100%; border-collapse:collapse; } th,td { text-align:right; padding:10px; border-bottom:1px solid #e6ece6; }
       .split { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+      #farmMap { width:100%; height:420px; border-radius:12px; border:1px solid #d9e5db; overflow:hidden; }
       @media(max-width:600px){ main{padding:14px} header{padding:16px} .card{padding:16px} .split{grid-template-columns:1fr;} }
     </style>
   </head>
@@ -56,6 +58,11 @@
           </div>
         </div>
 
+        <div class="card">
+          <h3>خريطة الحقول والمزارع</h3>
+          <div id="farmMap" aria-label="خريطة الحقول والمزارع"></div>
+        </div>
+
         <div class="card split">
           <div>
             <h3>إضافة مزرعة جديدة</h3>
@@ -78,6 +85,8 @@
               <label>نوع التربة</label><input id="fieldSoil" value="loam" />
               <label>نظام الري</label><input id="fieldIrrigation" value="rainfed" />
               <label>المساحة (هكتار)</label><input id="fieldArea" type="number" step="0.1" value="1" required />
+              <label>خط العرض</label><input id="fieldLatitude" type="number" step="0.000001" value="36.7" />
+              <label>خط الطول</label><input id="fieldLongitude" type="number" step="0.000001" value="38.2" />
               <button type="submit">حفظ القطعة</button>
             </form>
           </div>
@@ -95,14 +104,70 @@
       </section>
     </main>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
       const loginSection = document.getElementById('login');
       const dashboard = document.getElementById('dashboard');
       const farmSelect = document.getElementById('fieldFarmSelect');
+      let farmMap = null;
+      let farmMarkers = null;
 
       function escapeHtml(text) {
         const value = text == null ? '' : String(text);
         return value.replace(/[&<>"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+      }
+
+      function ensureMap() {
+        if (!farmMap) {
+          farmMap = L.map('farmMap').setView([36.7, 38.2], 7);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+          }).addTo(farmMap);
+          farmMarkers = L.layerGroup().addTo(farmMap);
+        }
+        return farmMap;
+      }
+
+      function renderMap(farms, fieldsByFarm) {
+        const map = ensureMap();
+        farmMarkers.clearLayers();
+        const markers = [];
+
+        for (const farm of farms || []) {
+          const matching = fieldsByFarm[farm.id] || [];
+          const points = matching.filter(field => Number.isFinite(field.latitude) && Number.isFinite(field.longitude));
+          if (points.length) {
+            const center = points.reduce((acc, item) => {
+              acc.lat += Number(item.latitude);
+              acc.lng += Number(item.longitude);
+              return acc;
+            }, { lat: 0, lng: 0 });
+            const avgLat = center.lat / points.length;
+            const avgLng = center.lng / points.length;
+            markers.push({ lat: avgLat, lng: avgLng, title: farm.name, color: '#17643b' });
+          }
+        }
+
+        if (markers.length) {
+          const bounds = L.latLngBounds(markers.map(item => [item.lat, item.lng]));
+          map.fitBounds(bounds.pad(0.3));
+        }
+
+        for (const farm of farms || []) {
+          const matching = fieldsByFarm[farm.id] || [];
+          for (const field of matching) {
+            if (Number.isFinite(field.latitude) && Number.isFinite(field.longitude)) {
+              const marker = L.circleMarker([Number(field.latitude), Number(field.longitude)], {
+                radius: 7,
+                color: '#237a49',
+                weight: 2,
+                fillColor: '#a8d5b2',
+                fillOpacity: 0.9
+              }).bindPopup(`<strong>${escapeHtml(field.name)}</strong><br>${escapeHtml(field.crop || 'محصول غير محدد')}<br>${escapeHtml(farm.name)}`);
+              marker.addTo(farmMarkers);
+            }
+          }
+        }
       }
 
       async function fetchJson(url, options = {}) {
@@ -117,13 +182,22 @@
       async function loadDashboard() {
         try {
           const data = await fetchJson('/api/dashboard');
+          const farms = data.farms || [];
+          const fieldsByFarm = {};
+          for (const farm of farms) {
+            try {
+              fieldsByFarm[farm.id] = await fetchJson(`/api/farms/${farm.id}/fields`);
+            } catch {
+              fieldsByFarm[farm.id] = [];
+            }
+          }
+
           document.getElementById('welcome').textContent = 'مرحباً ' + data.username;
           document.getElementById('knowledgeBase').textContent = data.knowledge_base;
           document.getElementById('farmCount').textContent = data.farm_count ?? 0;
           document.getElementById('fieldCount').textContent = data.field_count ?? 0;
           document.getElementById('dbStatus').textContent = data.database === 'connected' ? 'متصلة' : data.database === 'unavailable' ? 'غير متاحة' : 'غير مهيأة';
 
-          const farms = data.farms || [];
           if (farmSelect) {
             farmSelect.innerHTML = farms.map(farm => '<option value="' + escapeHtml(farm.id) + '">' + escapeHtml(farm.name) + '</option>').join('');
           }
@@ -135,6 +209,7 @@
           const recent = data.recent_activity || [];
           activity.innerHTML = recent.length ? '<table><thead><tr><th>النوع</th><th>الاسم</th><th>التاريخ</th></tr></thead><tbody>' + recent.map(item => '<tr><td>' + escapeHtml(item.type) + '</td><td>' + escapeHtml(item.name) + '</td><td>' + escapeHtml(item.created_at || '') + '</td></tr>').join('') + '</tbody></table>' : '<p class="muted">لا يوجد نشاط حديث.</p>';
 
+          renderMap(farms, fieldsByFarm);
           loginSection.classList.add('hidden');
           dashboard.classList.remove('hidden');
         } catch (error) {
@@ -196,7 +271,9 @@
           crop: document.getElementById('fieldCrop').value,
           soil_type: document.getElementById('fieldSoil').value,
           irrigation: document.getElementById('fieldIrrigation').value,
-          area_ha: Number(document.getElementById('fieldArea').value)
+          area_ha: Number(document.getElementById('fieldArea').value),
+          latitude: Number(document.getElementById('fieldLatitude').value),
+          longitude: Number(document.getElementById('fieldLongitude').value)
         };
         await fetchJson('/api/farms/' + farmId + '/fields', {
           method: 'POST',
