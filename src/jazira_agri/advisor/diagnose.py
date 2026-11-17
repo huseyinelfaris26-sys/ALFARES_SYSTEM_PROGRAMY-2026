@@ -21,12 +21,30 @@ from ..knowledge.loader import data_dir, load_crops, load_diseases
 ALLOWED_SUFFIXES = {".jpg", ".jpeg", ".png", ".webp"}
 IMAGE_HINT_WEIGHT = 0.5
 MAX_PHOTO_BYTES = 20 * 1024 * 1024
+LOG_ROTATION_MAX_BYTES = 5 * 1024 * 1024
+LOG_ROTATION_BACKUPS = 5
 
 
 class ImageClassifier(Protocol):
     """Plug in a trained model; return disease-id to probability (0..1)."""
 
     def predict(self, path: Path) -> dict[str, float]: ...
+
+
+def _rotate_log_if_needed(log_path: Path, max_bytes: int = LOG_ROTATION_MAX_BYTES, backups: int = LOG_ROTATION_BACKUPS) -> None:
+    """Rotate diagnosis logs to keep file sizes bounded."""
+    if not log_path.exists() or log_path.stat().st_size <= max_bytes:
+        return
+    for idx in range(backups - 1, 0, -1):
+        prev = log_path.with_suffix(f".{idx}{log_path.suffix}")
+        next_path = log_path.with_suffix(f".{idx + 1}{log_path.suffix}")
+        if idx == backups - 1:
+            if prev.exists():
+                prev.unlink()
+        if prev.exists():
+            prev.replace(next_path)
+    if log_path.exists():
+        log_path.replace(log_path.with_suffix(f".1{log_path.suffix}"))
 
 
 def analyze_colors(path: Path) -> dict[str, float]:
@@ -158,6 +176,7 @@ def diagnose(
     }
     log = data_dir() / "logs" / "diagnoses.jsonl"
     log.parent.mkdir(parents=True, exist_ok=True)
+    _rotate_log_if_needed(log)
     with log.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps({"t": int(time.time()), **output}, ensure_ascii=False) + "\n")
     return output
