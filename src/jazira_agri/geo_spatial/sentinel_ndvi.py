@@ -38,39 +38,38 @@ def _log(msg: str, level: str = "INFO") -> None:
 
 
 def _aoi_bbox(aoi: dict[str, Any]) -> list[float]:
-    """Return a validated [west, south, east, north] bbox for Polygon/MultiPolygon GeoJSON."""
+    """Return a validated [west, south, east, north] bbox from GeoJSON polygon(s)."""
     features = aoi.get("features")
     if not isinstance(features, list) or not features:
         raise ValueError("AOI GeoJSON must contain at least one Feature")
-    geometry = features[0].get("geometry") if isinstance(features[0], dict) else None
-    if not isinstance(geometry, dict) or geometry.get("type") not in {"Polygon", "MultiPolygon"}:
-        raise ValueError("AOI geometry must be a Polygon or MultiPolygon")
 
     points: list[tuple[float, float]] = []
 
     def collect(value: Any) -> None:
-        if (
-            isinstance(value, (list, tuple))
-            and len(value) >= 2
-            and isinstance(value[0], Real)
-            and not isinstance(value[0], bool)
-            and isinstance(value[1], Real)
-            and not isinstance(value[1], bool)
-        ):
-            lon, lat = float(value[0]), float(value[1])
-            if not math.isfinite(lon) or not math.isfinite(lat) or not -180 <= lon <= 180 or not -90 <= lat <= 90:
-                raise ValueError("AOI coordinates must be finite longitude/latitude values in valid ranges")
-            points.append((lon, lat))
-            return
-        if isinstance(value, (list, tuple)):
+        if isinstance(value, (list, tuple)) and len(value) >= 2:
+            first, second = value[0], value[1]
+            if isinstance(first, Real) and not isinstance(first, bool) and isinstance(second, Real) and not isinstance(second, bool):
+                lon = float(first)
+                lat = float(second)
+                if not math.isfinite(lon) or not math.isfinite(lat):
+                    raise ValueError("AOI coordinates must be finite longitude/latitude values")
+                if not (-180 <= lon <= 180 and -90 <= lat <= 90):
+                    raise ValueError("AOI coordinates must fall within valid longitude/latitude ranges")
+                points.append((lon, lat))
+                return
             for item in value:
                 collect(item)
 
-    collect(geometry.get("coordinates"))
+    for feature in features:
+        geometry = feature.get("geometry") if isinstance(feature, dict) else None
+        if not isinstance(geometry, dict):
+            continue
+        collect(geometry.get("coordinates"))
+
     if not points:
         raise ValueError("AOI polygon contains no valid coordinate points")
-    longitudes, latitudes = zip(*points)
-    return [min(longitudes), min(latitudes), max(longitudes), max(latitudes)]
+    xs, ys = zip(*points)
+    return [min(xs), min(ys), max(xs), max(ys)]
 
 
 class SentinelNDVI:
