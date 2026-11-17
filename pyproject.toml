@@ -8,13 +8,13 @@ version = "0.1.0"
 description = "Offline-first agricultural decision support for the Euphrates and Jazira basin"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = ["Pillow>=10"]
+dependencies = ["Pillow>=10", "numpy>=1.26"]
 
 [project.optional-dependencies]
 weather = ["requests>=2.31"]
-geo = ["numpy>=1.26", "rasterio>=1.3", "requests>=2.31", "requests-cache>=1.2", "requests-oauthlib>=1.3", "tqdm>=4.66"]
+geo = ["rasterio>=1.3", "requests>=2.31", "requests-cache>=1.2", "requests-oauthlib>=1.3", "tqdm>=4.66"]
 ai = ["openai>=1.30"]
-all = ["numpy>=1.26", "openai>=1.30", "rasterio>=1.3", "requests>=2.31", "requests-cache>=1.2", "requests-oauthlib>=1.3", "tqdm>=4.66"]
+all = ["openai>=1.30", "rasterio>=1.3", "requests>=2.31", "requests-cache>=1.2", "requests-oauthlib>=1.3", "tqdm>=4.66"]
 
 [project.scripts]
 jazira = "jazira_agri.cli:main"
