@@ -1,24 +1,20 @@
-[build-system]
-requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "jazira-agri-os"
-version = "0.1.0"
-description = "Offline-first agricultural decision support for the Euphrates and Jazira basin"
+version = "1.0.0"
+description = "نظام الجزيرة الزراعي الذكي"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = ["Pillow>=10"]
+dependencies = [
+    "flet>=0.25.0",
+    # أضف هنا باقي مكتباتك الموجودة في requirements.txt بشرط أن تكون نقية أو مدعومة للأندرويد
+]
 
-[project.scripts]
-jazira = "jazira_agri.cli:main"
+[tool.flet]
+org = "com.jaziraagri"
+product = "JaziraAgri OS"
+company = "JaziraAgri"
+copyright = "Copyright (C) 2026"
 
-[tool.setuptools]
-package-dir = {"" = "src"}
+[tool.flet.android]
+adaptive_icon_background = "#1B5E20"
 
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.pytest.ini_options]
-pythonpath = ["src"]
-testpaths = ["tests"]
