@@ -1,20 +1,30 @@
 [project]
 name = "jazira-agri-os"
 version = "1.0.0"
-description = "نظام الجزيرة الزراعي الذكي"
+description = "نظام الجزيرة الزراعي الذكي - حوض الفرات والجزيرة السورية"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "flet>=0.25.0",
-    # أضف هنا باقي مكتباتك الموجودة في requirements.txt بشرط أن تكون نقية أو مدعومة للأندرويد
+    "numpy>=1.26.0",
+    "pydantic>=2.0.0",
+    "requests>=2.31.0",
 ]
 
 [tool.flet]
-org = "com.jaziraagri"
-product = "JaziraAgri OS"
+org = "com.jaziraagri.os"
+product = "JaziraAgri-OS"
 company = "JaziraAgri"
 copyright = "Copyright (C) 2026"
 
+[tool.flet.app]
+path = "."
+
 [tool.flet.android]
 adaptive_icon_background = "#1B5E20"
-
+permissions = [
+    "android.permission.INTERNET",
+    "android.permission.ACCESS_NETWORK_STATE",
+    "android.permission.ACCESS_FINE_LOCATION",
+    "android.permission.ACCESS_COARSE_LOCATION",
+]
