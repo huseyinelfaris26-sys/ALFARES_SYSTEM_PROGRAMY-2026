@@ -17,8 +17,14 @@ import sys
 from datetime import datetime, timedelta
 from typing import Optional
 import numpy as np
-import rasterio
-from rasterio.enums import Resampling
+try:
+    import rasterio
+    from rasterio.enums import Resampling
+    HAS_RASTERIO = True
+except ImportError:
+    rasterio = None
+    Resampling = None
+    HAS_RASTERIO = False
 import requests
 from requests_oauthlib import OAuth2Session
 from requests_cache import CachedSession
@@ -153,6 +159,8 @@ class SentinelNDVI:
 
     def compute_ndvi(self, red_path: pathlib.Path, nir_path: pathlib.Path) -> pathlib.Path:
         """حساب مؤشر NDVI من النطاق الأحمر ونطاق الأشعة تحت الحمراء القريبة"""
+        if not HAS_RASTERIO:
+            raise RuntimeError("rasterio is not available on this device")
         ndvi_path = self.cache_dir / "ndvi.tif"
 
         with rasterio.open(red_path) as src_red, \
