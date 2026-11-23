@@ -1,11 +1,11 @@
-name: Build Flutter Android APK
+
+name: Build JaziraAgri Android APK
 
 on:
   workflow_dispatch:
   push:
     branches:
       - main
-      - master
 
 permissions:
   contents: read
@@ -14,47 +14,50 @@ jobs:
   build:
     name: Build Android APK
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Java
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Set up Java JDK
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          channel: stable
-          cache: true
-
-      - name: Check Flutter project
-        shell: bash
+      - name: Upgrade pip
         run: |
-          if [ ! -f pubspec.yaml ]; then
-            echo "::error::pubspec.yaml was not found at the repository root."
-            exit 1
-          fi
+          python -m pip install --upgrade pip setuptools wheel
 
-          if [ ! -d android ]; then
-            echo "::error::The Android project directory is missing."
-            exit 1
-          fi
+      - name: Install JaziraAgri dependencies
+        run: |
+          python -m pip install -e .
 
-      - name: Install dependencies
-        run: flutter pub get
+      - name: Verify Flet installation
+        run: |
+          python -m pip show flet
+          flet --version
 
-      - name: Build debug APK
-        run: flutter build apk --debug
+      - name: Build Android APK
+        run: |
+          flet build apk --verbose
 
-      - name: Upload APK
+      - name: Verify APK
+        run: |
+          find build -type f -name "*.apk" -print
+          test -n "$(find build -type f -name "*.apk" -print -quit)"
+
+      - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
-          name: JaziraAgri-APK
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: JaziraAgri-OS-Android-APK
+          path: build/apk/*.apk
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 14
