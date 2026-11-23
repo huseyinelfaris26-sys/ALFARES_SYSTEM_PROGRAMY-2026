@@ -1,13 +1,6 @@
-name: Build JaziraAgri-OS APK & Desktop
+# .github/workflows/build.release.yml
+name: Build JaziraAgri-OS Release
 
 on:
   workflow_dispatch:
-
-jobs:
-  build-android-apk:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup
+  # يمكنك تفعيل هذا الس
