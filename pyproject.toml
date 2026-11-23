@@ -17,30 +17,33 @@ classifiers = [
 ]
 
 dependencies = [
-    "flet>=0.25.0,<0.27.0",
-    "numpy>=1.26.0,<2.0.0",
-    "pydantic>=2.7.0,<3.0.0",
-    "requests>=2.31.0,<3.0.0",
-    "pillow>=10.3.0,<11.0.0",
-    "requests-oauthlib>=2.0.0,<3.0.0",
-    "requests-cache>=1.2.0,<2.0.0",
-    "tqdm>=4.66.0,<5.0.0",
+    "flet>=0.25.0,<0.28.0",
+    "numpy>=1.26.0",
+    "pydantic>=2.7.0",
+    "requests>=2.31.0",
+    "pillow>=10.3.0",
+    "requests-oauthlib>=2.0.0",
+    "requests-cache>=1.2.0",
+    "tqdm>=4.66.0",
 ]
 
 [project.urls]
 Homepage = "https://github.com/jaziraagri/jazira-agri-os"
+Repository = "https://github.com/jaziraagri/jazira-agri-os"
 
 [tool.flet]
+# إعدادات التطبيق العامة
 org = "com.jaziraagri.os"
 product = "JaziraAgri-OS"
 company = "JaziraAgri"
 copyright = "Copyright (C) 2026 JaziraAgri"
 
-# ✅ التصحيح: entrypoint يشير إلى main.py في الجذر
+# نقطة الدخول (بما أن main.py في الجذر)
 [tool.flet.app]
 entrypoint = "main.py"
 
 [tool.flet.android]
+# إعدادات الأندرويد
 adaptive_icon_background = "#1B5E20"
 min_sdk = 24
 target_sdk = 34
