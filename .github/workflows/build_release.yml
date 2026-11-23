@@ -1,63 +1,13 @@
-
-name: Build JaziraAgri Android APK
-
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
-
-permissions:
-  contents: read
-
+name: Build Flet APK
+on: [push, workflow_dispatch]
 jobs:
-  build:
-    name: Build Android APK
+  build-apk:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - name: Build APK
+        uses: flet-dev/flet-build-action@v1
         with:
-          python-version: "3.11"
-          cache: pip
-
-      - name: Set up Java JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "17"
-
-      - name: Upgrade pip
-        run: |
-          python -m pip install --upgrade pip setuptools wheel
-
-      - name: Install JaziraAgri dependencies
-        run: |
-          python -m pip install -e .
-
-      - name: Verify Flet installation
-        run: |
-          python -m pip show flet
-          flet --version
-
-      - name: Build Android APK
-        run: |
-          flet build apk --verbose
-
-      - name: Verify APK
-        run: |
-          find build -type f -name "*.apk" -print
-          test -n "$(find build -type f -name "*.apk" -print -quit)"
-
-      - name: Upload Android APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: JaziraAgri-OS-Android-APK
-          path: build/apk/*.apk
-          if-no-files-found: error
-          retention-days: 14
+          target: apk
+          python-version: '3.11'
+         
