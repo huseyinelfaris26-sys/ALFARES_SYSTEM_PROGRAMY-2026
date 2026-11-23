@@ -164,6 +164,9 @@ def main(page: ft.Page):
     page.padding = 12
     page.scroll = ft.ScrollMode.AUTO
 
+    snack_bar = ft.SnackBar(content=ft.Text(""))
+    page.overlay.append(snack_bar)
+
     salinity_history = [2.1, 2.3, 2.8, 3.2, 2.9]
 
     # -----------------------------------------------------
@@ -171,12 +174,13 @@ def main(page: ft.Page):
     # -----------------------------------------------------
 
     def show_message(message, color=ft.Colors.GREEN_800):
-        page.open(
-            ft.SnackBar(
-                content=ft.Text(str(message)),
-                bgcolor=color,
-            )
+        snack_bar.content = ft.Text(
+            str(message),
+            color=ft.Colors.WHITE,
         )
+        snack_bar.bgcolor = color
+        snack_bar.open = True
+        page.update()
 
     def make_field(label, value="", hint=""):
         return ft.TextField(
@@ -533,13 +537,13 @@ def main(page: ft.Page):
 
         latitude = make_field(
             "خط العرض",
-            "",
+            "36.6",
             "أدخل خط عرض موقع الحقل",
         )
 
         elevation = make_field(
             "ارتفاع الحقل عن سطح البحر (متر)",
-            "",
+            "350",
         )
 
         solar = make_field(
@@ -1000,13 +1004,22 @@ def main(page: ft.Page):
             hint_text="/storage/emulated/0/Download/leaf.jpg",
         )
 
+        def on_file_picked(e: ft.FilePickerResultEvent):
+            if e.files and e.files[0].path:
+                image_path.value = e.files[0].path
+                image_path.update()
+
+        file_picker = ft.FilePicker(on_result=on_file_picked)
+        if file_picker not in page.overlay:
+            page.overlay.append(file_picker)
+            page.update()
+
         result_box = ft.Container(
             padding=15,
             border_radius=12,
             bgcolor=ft.Colors.GREEN_50,
             content=ft.Text(
-                "أدخل مسار صورة يستطيع التطبيق قراءتها، "
-                "ثم اضغط تحليل الصورة."
+                "اختر صورة من الجهاز أو أدخل مسارها، ثم اضغط تحليل الصورة."
             ),
         )
 
@@ -1016,7 +1029,7 @@ def main(page: ft.Page):
 
                 if not path:
                     raise ValueError(
-                        "أدخل مسار الصورة أولاً."
+                        "اختر صورة أو أدخل مسارها أولاً."
                     )
 
                 result = analyze_leaf_image(path)
@@ -1037,4 +1050,68 @@ def main(page: ft.Page):
                             f"المناطق الصفراء: {result['yellow']}%"
                         ),
                         ft.Text(
-                            f"المناطق
+                            f"المناطق البنية: {result['brown']}%"
+                        ),
+                        ft.Text(
+                            result["advice"],
+                            size=13,
+                            color=ft.Colors.GREY_800,
+                        ),
+                    ],
+                    spacing=6,
+                )
+
+                page.update()
+
+            except Exception as ex:
+                result_box.bgcolor = ft.Colors.RED_50
+
+                result_box.content = ft.Text(
+                    f"تعذر تحليل الصورة:\n{ex}",
+                    color=ft.Colors.RED_800,
+                    selectable=True,
+                )
+
+                page.update()
+
+        controls = [
+            image_path,
+            ft.Row(
+                [
+                    ft.OutlinedButton(
+                        "اختيار صورة",
+                        icon=ft.Icons.FOLDER_OPEN,
+                        on_click=lambda e: file_picker.pick_files(
+                            allow_multiple=False,
+                            file_type=ft.FilePickerFileType.IMAGE,
+                        ),
+                    ),
+                    ft.ElevatedButton(
+                        "تحليل الصورة",
+                        icon=ft.Icons.SEARCH,
+                        on_click=analyze_image,
+                    ),
+                ],
+                wrap=True,
+                spacing=10,
+            ),
+            result_box,
+            ft.Text(
+                "تنبيه: هذا التحليل يعتمد على نسب الألوان (RGB) فقط "
+                "ولا يغني عن الفحص الزراعي المختص.",
+                size=12,
+                color=ft.Colors.GREY_700,
+            ),
+        ]
+
+        show_screen(
+            "تحليل صور الأوراق",
+            "تقدير مبدئي للاصفرار والبقع البنية في الورقة",
+            controls,
+        )
+
+    show_dashboard()
+
+
+if __name__ == "__main__":
+    ft.app(target=main)
