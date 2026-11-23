@@ -1,56 +1,56 @@
-import flet as ft
- requests
- numpy as np
-from pydantic import BaseModel
-from PIL Image
-from io BytesIO
+# pyproject.toml
+[project]
+name = "jazira-agri-os"
+version = "1.1.0"
+description = "نظام الجزيرة الزراعي الذكي - حوض الفرات والجزيرة السورية"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "JaziraAgri Team", email = "dev@jaziraagri.com" },
+]
+keywords = ["agriculture", "flet", "syria", "euphrates", "irrigation"]
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: Android",
+]
 
+dependencies = [
+    "flet>=0.25.0,<0.27.0",
+    "numpy>=1.26.0,<2.0.0",
+    "pydantic>=2.7.0,<3.0.0",
+    "requests>=2.31.0,<3.0.0",
+    "pillow>=10.3.0,<11.0.0",
+    "requests-oauthlib>=2.0.0,<3.0.0",
+    "requests-cache>=1.2.0,<2.0.0",
+    "tqdm>=4.66.0,<5.0.0",
+]
 
-class CropData(BaseModel):
-    name: str
-    growth_stage: str
-    health_status: str
+[project.urls]
+Homepage = "https://github.com/jaziraagri/jazira-agri-os"
 
+[tool.flet]
+org = "com.jaziraagri.os"
+product = "JaziraAgri-OS"
+company = "JaziraAgri"
+copyright = "Copyright (C) 2026 JaziraAgri"
 
-def fetch_crop_data() -> list[CropData]:
-    response =.get("https://api.example.com/crops")
-   .raise_for()
-    return [CropData(**item) for item in.json()def analyze_health(crop_data):
-   _scores = np.random(len(crop_data))  # تحليل عشوائي
-    for i, crop in enumerate(crop_data):
-        crop.health =[i    crop_data
+# ✅ التصحيح: entrypoint يشير إلى main.py في الجذر
+[tool.flet.app]
+entrypoint = "main.py"
 
+[tool.flet.android]
+adaptive_icon_background = "#1B5E20"
+min_sdk = 24
+target_sdk = 34
 
-def load_image(url: str) ->:
-    =.get(url)
-   _for()
-   .open(BytesIO(response.content))
-
-
-def main(page: ft.Page):
-    page.title = "نظام الجزيرةعي الذكي"
-    page.vertical_alignment = ft.MainAxisAlignment.CENTER
-
-    greeting = ft.Text("مرحبًا بكم في نظامعي!", style="headlineMedium")
-    start_button = ft.ElevatedButton(text="ابدأ", on_click=on_start)
-
-    page.add(g,)
-
-
-def on(e):
-    try:
- crop_data =_crop_data()
- analyzed_data =(crop_data)
-
- for crop in_data:
-            details = f"محصول: {crop.name}, مرحلة النمو: {crop.growth}, الحالة: {crop}"
- page.add(ft.Text(details))
-        
- image = load("https://.com/crop.jpg")
- page.add(ft.Image(src=image))
-    except Exception as ex:
- page.add(ft.Text(f"حدث خطأ: {str(ex)}", color="red"))
-
-
-if __name__ == "__main__":
-    ft.app(target=main)
+permissions = [
+    "android.permission.INTERNET",
+    "android.permission.ACCESS_NETWORK_STATE",
+    "android.permission.ACCESS_FINE_LOCATION",
+    "android.permission.ACCESS_COARSE_LOCATION",
+    "android.permission.CAMERA",
+    "android.permission.READ_MEDIA_IMAGES",
+    "android.permission.READ_MEDIA_VIDEO",
+]
