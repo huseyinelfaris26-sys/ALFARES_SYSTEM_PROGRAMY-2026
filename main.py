@@ -1,12 +1,23 @@
-import flet as ft
+import math
 import sys
-from pathlib import Path
 from datetime import date
-from PIL import Image
+from pathlib import Path
+
+import flet as ft
+from PIL import Image, ImageOps
+
+
+# =========================================================
+# مسارات المشروع
+# =========================================================
 
 ROOT_DIR = Path(__file__).resolve().parent
-sys.path.insert(0, str(ROOT_DIR))
-sys.path.insert(0, str(ROOT_DIR / "src"))
+
+for directory in (ROOT_DIR, ROOT_DIR / "src"):
+    directory_string = str(directory)
+    if directory_string not in sys.path:
+        sys.path.insert(0, directory_string)
+
 
 from jazira_agri.intelligence.deficit_irrigation import (
     Crop,
@@ -21,6 +32,11 @@ from jazira_agri.intelligence.deficit_irrigation import (
     DeficitIrrigationEngine,
 )
 
+
+# =========================================================
+# بيانات الدخول الحالية
+# =========================================================
+
 VALID_USER = "HUSIEN ALFARES"
 VALID_PASS = "H99155729614a"
 
@@ -30,35 +46,74 @@ VALID_PASS = "H99155729614a"
 # =========================================================
 
 def analyze_leaf_image(image_path: str) -> dict:
-    img = Image.open(image_path).convert("RGB")
-    img = img.resize((200, 200))
+    path = Path(image_path).expanduser()
 
-    pixels = list(img.getdata())
-    total = len(pixels)
+    if not path.is_file():
+        raise ValueError(
+            "لم يتم العثور على الصورة في المسار المحدد."
+        )
+
+    with Image.open(path) as source:
+        image = ImageOps.exif_transpose(source)
+        image = image.convert("RGB")
+        image = image.resize((200, 200))
 
     healthy_green = 0
     yellow_stress = 0
     brown_necrosis = 0
+    valid_pixels = 0
 
-    for r, g, b in pixels:
-        if (r > 235 and g > 235 and b > 235) or (
-            r < 20 and g < 20 and b < 20
-        ):
-            total -= 1
+    for red, green, blue in image.getdata():
+        is_nearly_white = (
+            red > 235
+            and green > 235
+            and blue > 235
+        )
+
+        is_nearly_black = (
+            red < 20
+            and green < 20
+            and blue < 20
+        )
+
+        if is_nearly_white or is_nearly_black:
             continue
 
-        if g > r * 1.12 and g > b * 1.15:
+        valid_pixels += 1
+
+        if green > red * 1.12 and green > blue * 1.15:
             healthy_green += 1
-        elif r > 140 and g > 130 and b < 100:
+
+        elif red > 140 and green > 130 and blue < 100:
             yellow_stress += 1
-        elif r > g * 1.15 and r > b * 1.2 and g < 130:
+
+        elif (
+            red > green * 1.15
+            and red > blue * 1.2
+            and green < 130
+        ):
             brown_necrosis += 1
 
-    total = max(total, 1)
+    if valid_pixels == 0:
+        raise ValueError(
+            "الصورة لا تحتوي على ألوان كافية للتحليل بعد استبعاد "
+            "المناطق شديدة السواد أو البياض. اختر صورة أوضح."
+        )
 
-    green_pct = round(healthy_green / total * 100, 1)
-    yellow_pct = round(yellow_stress / total * 100, 1)
-    brown_pct = round(brown_necrosis / total * 100, 1)
+    green_pct = round(
+        healthy_green / valid_pixels * 100,
+        1,
+    )
+
+    yellow_pct = round(
+        yellow_stress / valid_pixels * 100,
+        1,
+    )
+
+    brown_pct = round(
+        brown_necrosis / valid_pixels * 100,
+        1,
+    )
 
     if yellow_pct > 25:
         diagnosis = "اصفرار ملحوظ في أنسجة الورقة"
@@ -66,14 +121,18 @@ def analyze_leaf_image(image_path: str) -> dict:
             "افحص الورقة بحثاً عن أعراض نقص العناصر أو الإصابة المرضية. "
             "هذا التحليل اللوني لا يؤكد التشخيص."
         )
+
     elif brown_pct > 20:
         diagnosis = "مناطق بنية أو نخرية ظاهرة"
         advice = (
             "افحص أسباب الاحتراق أو التبقع، وتحقق من ملوحة مياه الري "
             "والتربة عند الحاجة."
         )
+
     else:
-        diagnosis = "لم تظهر نسبة مرتفعة من الاصفرار أو المناطق البنية"
+        diagnosis = (
+            "لم تظهر نسبة مرتفعة من الاصفرار أو المناطق البنية"
+        )
         advice = (
             "تابع حالة النبات وافحص الأوراق من الجهتين. "
             "التحليل RGB أولي وليس تشخيصاً مرضياً مؤكداً."
@@ -93,14 +152,15 @@ def analyze_leaf_image(image_path: str) -> dict:
 # =========================================================
 
 def main(page: ft.Page):
-
     page.title = "JaziraAgri-OS | نظام الجزيرة الزراعي الذكي"
     page.rtl = True
     page.theme_mode = ft.ThemeMode.LIGHT
+
     page.theme = ft.Theme(
         color_scheme_seed=ft.Colors.GREEN_800,
         use_material3=True,
     )
+
     page.padding = 12
     page.scroll = ft.ScrollMode.AUTO
 
@@ -111,12 +171,12 @@ def main(page: ft.Page):
     # -----------------------------------------------------
 
     def show_message(message, color=ft.Colors.GREEN_800):
-        page.snack_bar = ft.SnackBar(
-            content=ft.Text(message),
-            bgcolor=color,
+        page.open(
+            ft.SnackBar(
+                content=ft.Text(str(message)),
+                bgcolor=color,
+            )
         )
-        page.snack_bar.open = True
-        page.update()
 
     def make_field(label, value="", hint=""):
         return ft.TextField(
@@ -124,25 +184,44 @@ def main(page: ft.Page):
             value=value,
             hint_text=hint,
             keyboard_type=ft.KeyboardType.NUMBER,
-            expand=True,
         )
 
     def make_dropdown(label, options, value):
         return ft.Dropdown(
             label=label,
             options=[
-                ft.dropdown.Option(key=k, text=v)
-                for k, v in options
+                ft.dropdown.Option(
+                    key=key,
+                    text=text,
+                )
+                for key, text in options
             ],
             value=value,
-            expand=True,
         )
 
     def parse_number(field, label):
+        digits_map = str.maketrans(
+            "٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹",
+            "01234567890123456789",
+        )
+
+        raw = (field.value or "").strip().translate(digits_map)
+        raw = raw.replace("٫", ".").replace(",", ".")
+
         try:
-            return float(field.value.strip().replace(",", "."))
-        except (ValueError, AttributeError):
-            raise ValueError(f"أدخل قيمة رقمية صحيحة في حقل: {label}")
+            value = float(raw)
+
+        except (ValueError, TypeError):
+            raise ValueError(
+                f"أدخل قيمة رقمية صحيحة في حقل: {label}"
+            ) from None
+
+        if not math.isfinite(value):
+            raise ValueError(
+                f"أدخل قيمة رقمية محدودة في حقل: {label}"
+            )
+
+        return value
 
     def page_title(title, subtitle=""):
         controls = [
@@ -156,10 +235,21 @@ def main(page: ft.Page):
 
         if subtitle:
             controls.append(
-                ft.Text(subtitle, size=13, color=ft.Colors.GREY_700)
+                ft.Text(
+                    subtitle,
+                    size=13,
+                    color=ft.Colors.GREY_700,
+                )
             )
 
-        return ft.Column(controls, spacing=4)
+        return ft.Column(
+            controls,
+            spacing=4,
+        )
+
+    def arabic_text(value):
+        text = getattr(value, "ar", None)
+        return str(text if text is not None else value)
 
     # -----------------------------------------------------
     # التنقل بين الشاشات
@@ -168,10 +258,13 @@ def main(page: ft.Page):
     def switch_view(index):
         if index == 0:
             show_dashboard()
+
         elif index == 1:
             show_irrigation()
+
         elif index == 2:
             show_salinity()
+
         elif index == 3:
             show_image_analysis()
 
@@ -219,8 +312,7 @@ def main(page: ft.Page):
                     *controls,
                 ],
                 spacing=15,
-                scroll=ft.ScrollMode.AUTO,
-                expand=True,
+                horizontal_alignment=ft.CrossAxisAlignment.STRETCH,
             )
         )
 
@@ -231,7 +323,6 @@ def main(page: ft.Page):
     # =====================================================
 
     def show_dashboard():
-
         def stat_card(title, value, subtitle, icon):
             return ft.Container(
                 width=155,
@@ -293,13 +384,11 @@ def main(page: ft.Page):
                     spacing=8,
                 ),
             ),
-
             ft.Text(
                 "الأدوات الزراعية",
                 size=18,
                 weight=ft.FontWeight.BOLD,
             ),
-
             ft.Row(
                 [
                     stat_card(
@@ -310,23 +399,22 @@ def main(page: ft.Page):
                     ),
                     stat_card(
                         "ملوحة التربة",
-                        f"{salinity_history[-1]}",
-                        "آخر قيمة تجريبية",
+                        str(salinity_history[-1]),
+                        "آخر قيمة مسجلة في الجلسة",
                         ft.Icons.LANDSCAPE,
                     ),
                 ],
                 wrap=True,
                 spacing=10,
             ),
-
             ft.Row(
                 [
-                    ft.Button(
+                    ft.ElevatedButton(
                         "حساب الاحتياج المائي",
                         icon=ft.Icons.CALCULATE,
                         on_click=lambda e: show_irrigation(),
                     ),
-                    ft.Button(
+                    ft.ElevatedButton(
                         "تحليل صورة نبات",
                         icon=ft.Icons.CAMERA_ALT,
                         on_click=lambda e: show_image_analysis(),
@@ -334,17 +422,14 @@ def main(page: ft.Page):
                 ],
                 wrap=True,
             ),
-
-            ft.Button(
+            ft.ElevatedButton(
                 "متابعة ملوحة التربة",
                 icon=ft.Icons.SHOW_CHART,
                 on_click=lambda e: show_salinity(),
             ),
-
             ft.Divider(),
-
             ft.Text(
-                "ملاحظة: القيم المعروضة في لوحة القيادة ليست قراءات "
+                "ملاحظة: القراءات الأولية المعروضة تجريبية وليست قراءات "
                 "ميدانية مباشرة. أدخل بيانات حقلك للحصول على نتائج حسابية.",
                 size=12,
                 color=ft.Colors.GREY_700,
@@ -362,7 +447,6 @@ def main(page: ft.Page):
     # =====================================================
 
     def show_irrigation():
-
         crop_options = [
             ("wheat", "قمح"),
             ("cotton", "قطن"),
@@ -419,7 +503,7 @@ def main(page: ft.Page):
         moisture = make_field(
             "رطوبة التربة (%)",
             "20",
-            "أدخل الرطوبة الحجمية المقاسة",
+            "أدخل النسبة المئوية، مثلاً 20 تعني 20%",
         )
 
         rainfall = make_field(
@@ -427,15 +511,30 @@ def main(page: ft.Page):
             "0",
         )
 
-        tmin = make_field("درجة الحرارة الصغرى °C", "18")
-        tmax = make_field("درجة الحرارة العظمى °C", "32")
-        humidity = make_field("الرطوبة النسبية المتوسطة (%)", "40")
-        wind = make_field("سرعة الرياح (متر/ثانية)", "2")
+        tmin = make_field(
+            "درجة الحرارة الصغرى °C",
+            "18",
+        )
+
+        tmax = make_field(
+            "درجة الحرارة العظمى °C",
+            "32",
+        )
+
+        humidity = make_field(
+            "الرطوبة النسبية المتوسطة (%)",
+            "40",
+        )
+
+        wind = make_field(
+            "سرعة الرياح (متر/ثانية)",
+            "2",
+        )
 
         latitude = make_field(
             "خط العرض",
             "",
-            "أدخل إحداثيات موقع الحقل",
+            "أدخل خط عرض موقع الحقل",
         )
 
         elevation = make_field(
@@ -456,6 +555,7 @@ def main(page: ft.Page):
         soil_ec = make_field(
             "ملوحة التربة ECe (dS/m)",
             "",
+            "اختياري",
         )
 
         area = make_field(
@@ -479,7 +579,6 @@ def main(page: ft.Page):
         )
 
         def calculate_irrigation(e):
-
             try:
                 crop_map = {
                     "wheat": Crop.WHEAT,
@@ -510,44 +609,98 @@ def main(page: ft.Page):
                     "drip": IrrigationMethod.DRIP,
                 }
 
-                moisture_value = parse_number(
+                if crop_dd.value not in crop_map:
+                    raise ValueError("اختر المحصول.")
+
+                if stage_dd.value not in stage_map:
+                    raise ValueError("اختر مرحلة النمو.")
+
+                if soil_dd.value not in soil_map:
+                    raise ValueError("اختر نوع التربة.")
+
+                if method_dd.value not in method_map:
+                    raise ValueError("اختر طريقة الري.")
+
+                moisture_percent = parse_number(
                     moisture,
                     "رطوبة التربة",
                 )
 
-                # تحويل النسبة المئوية إلى كسر عشري عند الحاجة
-                if moisture_value > 1:
-                    moisture_value = moisture_value / 100
+                if not 0 < moisture_percent <= 100:
+                    raise ValueError(
+                        "رطوبة التربة يجب أن تكون أكبر من صفر وحتى 100%."
+                    )
+
+                moisture_value = moisture_percent / 100.0
 
                 rain_value = parse_number(
                     rainfall,
                     "الأمطار",
                 )
 
-                tmin_value = parse_number(tmin, "الحرارة الصغرى")
-                tmax_value = parse_number(tmax, "الحرارة العظمى")
-                humidity_value = parse_number(humidity, "الرطوبة")
-                wind_value = parse_number(wind, "سرعة الرياح")
-                latitude_value = parse_number(latitude, "خط العرض")
-                elevation_value = parse_number(elevation, "ارتفاع الحقل")
-                solar_value = parse_number(solar, "الإشعاع الشمسي")
-                water_ec_value = parse_number(water_ec, "ملوحة مياه الري")
-                area_value = parse_number(area, "مساحة الحقل")
-                progress_value = parse_number(progress, "تقدم مرحلة النمو")
+                tmin_value = parse_number(
+                    tmin,
+                    "الحرارة الصغرى",
+                )
+
+                tmax_value = parse_number(
+                    tmax,
+                    "الحرارة العظمى",
+                )
+
+                humidity_value = parse_number(
+                    humidity,
+                    "الرطوبة النسبية",
+                )
+
+                wind_value = parse_number(
+                    wind,
+                    "سرعة الرياح",
+                )
+
+                latitude_value = parse_number(
+                    latitude,
+                    "خط العرض",
+                )
+
+                elevation_value = parse_number(
+                    elevation,
+                    "ارتفاع الحقل",
+                )
+
+                solar_value = parse_number(
+                    solar,
+                    "الإشعاع الشمسي",
+                )
+
+                water_ec_value = parse_number(
+                    water_ec,
+                    "ملوحة مياه الري",
+                )
+
+                area_value = parse_number(
+                    area,
+                    "مساحة الحقل",
+                )
+
+                progress_value = parse_number(
+                    progress,
+                    "تقدم مرحلة النمو",
+                )
 
                 soil_ec_value = (
-                    parse_number(soil_ec, "ملوحة التربة")
-                    if soil_ec.value.strip()
+                    parse_number(
+                        soil_ec,
+                        "ملوحة التربة",
+                    )
+                    if (soil_ec.value or "").strip()
                     else None
                 )
 
-                if not 0 < moisture_value <= 1:
-                    raise ValueError(
-                        "رطوبة التربة يجب أن تكون أكبر من صفر وحتى 100%."
-                    )
-
                 if rain_value < 0:
-                    raise ValueError("الأمطار لا يمكن أن تكون سالبة.")
+                    raise ValueError(
+                        "الأمطار لا يمكن أن تكون سالبة."
+                    )
 
                 if tmin_value > tmax_value:
                     raise ValueError(
@@ -559,16 +712,25 @@ def main(page: ft.Page):
                         "الرطوبة النسبية يجب أن تكون بين 0 و100."
                     )
 
-                if wind_value < 0 or solar_value < 0:
+                if wind_value < 0:
                     raise ValueError(
-                        "الرياح والإشعاع الشمسي لا يمكن أن يكونا سالبين."
+                        "سرعة الرياح لا يمكن أن تكون سالبة."
+                    )
+
+                if solar_value < 0:
+                    raise ValueError(
+                        "الإشعاع الشمسي لا يمكن أن يكون سالباً."
                     )
 
                 if not -90 <= latitude_value <= 90:
-                    raise ValueError("خط العرض يجب أن يكون بين -90 و90.")
+                    raise ValueError(
+                        "خط العرض يجب أن يكون بين -90 و90."
+                    )
 
                 if area_value <= 0:
-                    raise ValueError("مساحة الحقل يجب أن تكون أكبر من صفر.")
+                    raise ValueError(
+                        "مساحة الحقل يجب أن تكون أكبر من صفر."
+                    )
 
                 if not 0 <= progress_value <= 1:
                     raise ValueError(
@@ -576,10 +738,17 @@ def main(page: ft.Page):
                     )
 
                 if water_ec_value < 0:
-                    raise ValueError("ملوحة المياه لا يمكن أن تكون سالبة.")
+                    raise ValueError(
+                        "ملوحة المياه لا يمكن أن تكون سالبة."
+                    )
 
-                if soil_ec_value is not None and soil_ec_value < 0:
-                    raise ValueError("ملوحة التربة لا يمكن أن تكون سالبة.")
+                if (
+                    soil_ec_value is not None
+                    and soil_ec_value < 0
+                ):
+                    raise ValueError(
+                        "ملوحة التربة لا يمكن أن تكون سالبة."
+                    )
 
                 soil_properties = SoilProperties.from_texture(
                     soil_map[soil_dd.value]
@@ -614,6 +783,7 @@ def main(page: ft.Page):
                 )
 
                 engine = DeficitIrrigationEngine(config)
+
                 recommendation = engine.recommend(
                     weather,
                     conditions,
@@ -622,19 +792,26 @@ def main(page: ft.Page):
                 warnings_text = ""
 
                 if recommendation.warnings:
-                    warnings_text = "\n\nتحذيرات:\n" + "\n".join(
-                        f"• {warning.ar}"
-                        for warning in recommendation.warnings
+                    warnings_text = (
+                        "\n\nتحذيرات:\n"
+                        + "\n".join(
+                            f"• {arabic_text(warning)}"
+                            for warning in recommendation.warnings
+                        )
                     )
 
-                summary_text = recommendation.summary.ar
+                summary_text = arabic_text(
+                    recommendation.summary
+                )
 
                 output = (
                     f"{summary_text}\n\n"
                     f"ET0: {recommendation.et0_mm:.2f} ملم/يوم\n"
                     f"ETc: {recommendation.etc_mm:.2f} ملم/يوم\n"
-                    f"عمق الري الصافي: {recommendation.net_depth_mm:.2f} ملم\n"
-                    f"عمق الري الإجمالي: {recommendation.gross_depth_mm:.2f} ملم\n"
+                    f"عمق الري الصافي: "
+                    f"{recommendation.net_depth_mm:.2f} ملم\n"
+                    f"عمق الري الإجمالي: "
+                    f"{recommendation.gross_depth_mm:.2f} ملم\n"
                     f"حجم المياه للهكتار: "
                     f"{recommendation.volume_m3_per_ha:.2f} م³\n"
                     f"حجم المياه للحقل: "
@@ -668,6 +845,7 @@ def main(page: ft.Page):
                     color=ft.Colors.RED_800,
                     selectable=True,
                 )
+
                 result_box.bgcolor = ft.Colors.RED_50
                 page.update()
 
@@ -681,9 +859,7 @@ def main(page: ft.Page):
             stage_dd,
             soil_dd,
             method_dd,
-
             ft.Divider(),
-
             ft.Text(
                 "بيانات التربة والمياه",
                 size=17,
@@ -695,9 +871,7 @@ def main(page: ft.Page):
             soil_ec,
             area,
             progress,
-
             ft.Divider(),
-
             ft.Text(
                 "بيانات الطقس والموقع",
                 size=17,
@@ -710,15 +884,12 @@ def main(page: ft.Page):
             latitude,
             elevation,
             solar,
-
-            ft.Button(
+            ft.ElevatedButton(
                 "احسب توصية الري الذكي",
                 icon=ft.Icons.CALCULATE,
                 on_click=calculate_irrigation,
             ),
-
             result_box,
-
             ft.Text(
                 "تنبيه علمي: دقة النتائج تعتمد على دقة قياس رطوبة التربة "
                 "وملوحة المياه والتربة وبيانات الطقس وموقع الحقل. "
@@ -740,18 +911,22 @@ def main(page: ft.Page):
     # =====================================================
 
     def show_salinity():
-
         ec_input = make_field(
             "قراءة ملوحة التربة EC (dS/m)",
             "",
         )
 
+        def history_value():
+            return (
+                "القراءات المسجلة:\n"
+                + "\n".join(
+                    f"{index + 1}. {value} dS/m"
+                    for index, value in enumerate(salinity_history)
+                )
+            )
+
         history_text = ft.Text(
-            "القراءات المسجلة:\n"
-            + "\n".join(
-                f"{i + 1}. {value} dS/m"
-                for i, value in enumerate(salinity_history)
-            ),
+            history_value(),
             selectable=True,
         )
 
@@ -776,38 +951,34 @@ def main(page: ft.Page):
 
                 salinity_history.append(value)
 
-                latest_text.value = f"آخر قراءة: {value} dS/m"
-
-                history_text.value = (
-                    "القراءات المسجلة:\n"
-                    + "\n".join(
-                        f"{i + 1}. {reading} dS/m"
-                        for i, reading in enumerate(salinity_history)
-                    )
+                latest_text.value = (
+                    f"آخر قراءة: {value} dS/m"
                 )
+
+                history_text.value = history_value()
+                ec_input.value = ""
 
                 page.update()
 
             except Exception as ex:
-                show_message(str(ex), ft.Colors.RED_800)
+                show_message(
+                    str(ex),
+                    ft.Colors.RED_800,
+                )
 
         controls = [
             latest_text,
             ec_input,
-
-            ft.Button(
+            ft.ElevatedButton(
                 "إضافة قراءة",
                 icon=ft.Icons.ADD,
                 on_click=add_reading,
             ),
-
             ft.Divider(),
-
             history_text,
-
             ft.Text(
-                "هذه القراءات محفوظة في ذاكرة الجلسة الحالية فقط. "
-                "لم يتم ربطها بعد بقاعدة بيانات دائمة.",
+                "القراءات الخمس الأولية تجريبية. القراءات الجديدة محفوظة "
+                "في ذاكرة الجلسة الحالية فقط، ولا توجد قاعدة بيانات دائمة.",
                 size=12,
                 color=ft.Colors.GREY_700,
             ),
@@ -824,11 +995,9 @@ def main(page: ft.Page):
     # =====================================================
 
     def show_image_analysis():
-
         image_path = ft.TextField(
             label="مسار صورة الورقة على الجهاز",
             hint_text="/storage/emulated/0/Download/leaf.jpg",
-            expand=True,
         )
 
         result_box = ft.Container(
@@ -836,24 +1005,23 @@ def main(page: ft.Page):
             border_radius=12,
             bgcolor=ft.Colors.GREEN_50,
             content=ft.Text(
-                "أدخل مسار الصورة ثم اضغط تحليل الصورة."
+                "أدخل مسار صورة يستطيع التطبيق قراءتها، "
+                "ثم اضغط تحليل الصورة."
             ),
         )
 
         def analyze_image(e):
-
             try:
-                path = image_path.value.strip()
+                path = (image_path.value or "").strip()
 
                 if not path:
-                    raise ValueError("أدخل مسار الصورة أولاً.")
-
-                if not Path(path).is_file():
                     raise ValueError(
-                        "لم يتم العثور على الصورة في المسار المحدد."
+                        "أدخل مسار الصورة أولاً."
                     )
 
                 result = analyze_leaf_image(path)
+
+                result_box.bgcolor = ft.Colors.GREEN_50
 
                 result_box.content = ft.Column(
                     [
@@ -869,147 +1037,4 @@ def main(page: ft.Page):
                             f"المناطق الصفراء: {result['yellow']}%"
                         ),
                         ft.Text(
-                            f"المناطق البنية: {result['brown']}%"
-                        ),
-                        ft.Divider(),
-                        ft.Text(
-                            "التوصية الأولية:",
-                            weight=ft.FontWeight.BOLD,
-                        ),
-                        ft.Text(result["advice"]),
-                    ],
-                    spacing=8,
-                )
-
-                page.update()
-
-            except Exception as ex:
-                result_box.content = ft.Text(
-                    f"تعذر تحليل الصورة:\n{ex}",
-                    color=ft.Colors.RED_800,
-                )
-                page.update()
-
-        controls = [
-            ft.Text(
-                "تحليل الألوان في صورة الورقة",
-                size=16,
-                weight=ft.FontWeight.BOLD,
-            ),
-
-            image_path,
-
-            ft.Button(
-                "تحليل الصورة",
-                icon=ft.Icons.CAMERA_ALT,
-                on_click=analyze_image,
-            ),
-
-            result_box,
-
-            ft.Text(
-                "ملاحظة: هذه أداة تحليل ألوان RGB وليست نموذج ذكاء "
-                "اصطناعي مدرباً على تشخيص الأمراض. النتائج استرشادية فقط.",
-                size=12,
-                color=ft.Colors.GREY_700,
-            ),
-        ]
-
-        show_screen(
-            "تحليل صور النباتات",
-            "تحليل أولي للألوان الخضراء والصفراء والبنية",
-            controls,
-        )
-
-    # =====================================================
-    # تسجيل الدخول
-    # =====================================================
-
-    def show_login():
-
-        username = ft.TextField(
-            label="اسم المستخدم",
-            prefix_icon=ft.Icons.PERSON,
-        )
-
-        password = ft.TextField(
-            label="كلمة المرور",
-            password=True,
-            can_reveal_password=True,
-            prefix_icon=ft.Icons.LOCK,
-        )
-
-        def login(e):
-
-            if (
-                username.value.strip() == VALID_USER
-                and password.value == VALID_PASS
-            ):
-                show_dashboard()
-            else:
-                show_message(
-                    "اسم المستخدم أو كلمة المرور غير صحيحة.",
-                    ft.Colors.RED_800,
-                )
-
-        page.clean()
-
-        page.add(
-            ft.Container(
-                expand=True,
-                alignment=ft.Alignment.CENTER,
-                content=ft.Container(
-                    width=420,
-                    padding=25,
-                    border_radius=18,
-                    bgcolor=ft.Colors.GREEN_50,
-                    content=ft.Column(
-                        [
-                            ft.Icon(
-                                ft.Icons.AGRICULTURE,
-                                size=65,
-                                color=ft.Colors.GREEN_800,
-                            ),
-
-                            ft.Text(
-                                "جزيرة الزراعي",
-                                size=25,
-                                weight=ft.FontWeight.BOLD,
-                                color=ft.Colors.GREEN_900,
-                            ),
-
-                            ft.Text(
-                                "نظام الإدارة والتحليل الزراعي الذكي",
-                                size=13,
-                            ),
-
-                            ft.Divider(),
-
-                            username,
-                            password,
-
-                            ft.Button(
-                                "تسجيل الدخول",
-                                icon=ft.Icons.LOGIN,
-                                on_click=login,
-                            ),
-                        ],
-                        horizontal_alignment=ft.CrossAxisAlignment.CENTER,
-                        spacing=15,
-                    ),
-                ),
-            )
-        )
-
-        page.update()
-
-    # بدء التطبيق
-    show_login()
-
-
-# =========================================================
-# تشغيل التطبيق
-# =========================================================
-
-if __name__ == "__main__":
-    ft.app(target=main)
+                            f"المناطق
