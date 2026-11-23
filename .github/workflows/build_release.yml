@@ -1,15 +1,29 @@
 name: Build Flet APK
-on: [push, workflow_dispatch]
+
+on:
+  push:
+  workflow_dispatch:
 
 jobs:
   build-apk:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Build APK
+        id: build
         uses: flet-dev/flet-build-action@v1
         with:
           target: apk
-          runner-python-version: '3.11'   # بيئة تشغيل الإجراء
-          bundled-python-version: '3.11'  # الإصدار المضمن في التطبيق
+          runner-python-version: "3.11"
+          bundled-python-version: "3.11"
+          build-number: ${{ github.run_number }}
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: flet-apk
+          path: ${{ steps.build.outputs.archive-path }}
+          if-no-files-found: error
