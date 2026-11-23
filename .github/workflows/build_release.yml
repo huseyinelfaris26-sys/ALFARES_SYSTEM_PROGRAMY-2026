@@ -1,62 +1,123 @@
-name: Build JaziraAgri-OS APK & Desktop
+name: Build JaziraAgri-OS APK & Windows
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - "main.py"
+      - "requirements.txt"
+      - "pyproject.toml"
+      - "src/**"
+      - "ui/**"
+      - "config/**"
+      - "data/**"
+      - "assets/**"
+      - ".github/workflows/build_release.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jaziraagri-build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.11"
+  FLET_VERSION: "0.28.3"
 
 jobs:
   build-android-apk:
+    name: Build Android APK
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python 3.11
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
 
-      - name: Setup Java 17 (Required for Android APK)
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Install Flet
+      - name: Install project dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install "flet>=0.25.0" pillow numpy pydantic requests
+          pip install -r requirements.txt
+          pip install "flet==${{ env.FLET_VERSION }}"
+
+      - name: Verify project entry point
+        run: |
+          test -f main.py
+          test -f requirements.txt
+          python -m py_compile main.py
 
       - name: Build Android APK
-        run: echo "y" | flet build apk --yes --verbose
+        id: build_apk
+        uses: flet-dev/flet-build-action@v1
+        with:
+          target: apk
+          working-directory: .
+          python-version: ${{ env.PYTHON_VERSION }}
+          build-number: ${{ github.run_number }}
+          verbose: true
 
       - name: Upload Android APK
         uses: actions/upload-artifact@v4
         with:
           name: JaziraAgri-OS-Android-APK
-          path: build/apk/*.apk
+          path: ${{ steps.build_apk.outputs.archive-path }}
+          if-no-files-found: error
+          retention-days: 30
 
   build-windows-desktop:
+    name: Build Windows Desktop App
     runs-on: windows-latest
+
+    env:
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: utf-8
+
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Python 3.11
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
 
-      - name: Install Flet
+      - name: Install project dependencies
+        shell: bash
         run: |
           python -m pip install --upgrade pip
-          pip install "flet>=0.25.0" pillow numpy pydantic requests
+          pip install -r requirements.txt
+          pip install "flet==${{ env.FLET_VERSION }}"
 
-      - name: Build Windows Executable
+      - name: Verify project entry point
         shell: bash
-        run: echo "y" | flet build windows --yes --verbose
+        run: |
+          test -f main.py
+          test -f requirements.txt
+          python -m py_compile main.py
 
-      - name: Upload Windows App
+      - name: Build Windows application
+        shell: bash
+        run: flet build windows --verbose --output build/windows .
+
+      - name: Verify Windows build output
+        shell: bash
+        run: |
+          test -d build/windows
+          find build/windows -maxdepth 2 -type f | head -n 20
+
+      - name: Upload Windows application
         uses: actions/upload-artifact@v4
         with:
           name: JaziraAgri-OS-Windows
-          path: build/windows/*
+          path: build/windows/**
+          if-no-files-found: error
+          retention-days: 30
