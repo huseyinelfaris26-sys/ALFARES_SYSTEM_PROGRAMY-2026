@@ -1,130 +1,39 @@
-
-# ============================================================
-# JaziraAgri-OS | نظام الجزيرة الزراعي الذكي
-# Android APK Build Configuration
-# ============================================================
-
 [build-system]
 requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
-# ------------------------------------------------------------
-# Project Information
-# ------------------------------------------------------------
-
 [project]
 name = "jazira-agri-os"
 version = "1.1.0"
-description = "نظام الجزيرة الزراعي الذكي - حوض الفرات والجزيرة السورية"
-readme = "README.md"
+description = "JaziraAgri agricultural management application"
 requires-python = ">=3.11"
-license = { text = "MIT" }
-
-authors = [
-    { name = "JaziraAgri Team", email = "dev@jaziraagri.com" },
-]
-
-keywords = [
-    "agriculture",
-    "artificial-intelligence",
-    "precision-agriculture",
-    "flet",
-    "syria",
-    "euphrates",
-    "jazira",
-    "irrigation",
-    "offline-first",
-    "satellite",
-]
-
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Operating System :: OS Independent",
-    "License :: OSI Approved :: MIT License",
-]
-
-# ------------------------------------------------------------
-# Python Dependencies
-# ------------------------------------------------------------
-
 dependencies = [
-    "flet>=0.25.0,<0.28.0",
+    "flet==0.27.6",
     "numpy>=1.26.0",
     "pydantic>=2.7.0",
     "requests>=2.31.0",
-    "pillow>=10.3.0",
+    "Pillow>=10.3.0",
     "requests-oauthlib>=2.0.0",
     "requests-cache>=1.2.0",
     "tqdm>=4.66.0",
 ]
 
-# ------------------------------------------------------------
-# Project URLs
-# ------------------------------------------------------------
-
-[project.urls]
-Homepage = "https://github.com/huseyinelfaris26-sys/JaziraAgri-OS"
-Repository = "https://github.com/huseyinelfaris26-sys/JaziraAgri-OS"
-Issues = "https://github.com/huseyinelfaris26-sys/JaziraAgri-OS/issues"
-
-# ------------------------------------------------------------
-# Setuptools Package Discovery
-# ------------------------------------------------------------
-
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["jazira_agri*"]
 
-# ------------------------------------------------------------
-# Flet Application Configuration
-# ------------------------------------------------------------
-
 [tool.flet]
-
-org = "com.jaziraagri.os"
+org = "com.jaziraagri"
 product = "JaziraAgri-OS"
 company = "JaziraAgri"
-copyright = "Copyright (C) 2026 JaziraAgri"
-
-# ------------------------------------------------------------
-# Application Entry Point
-# ------------------------------------------------------------
 
 [tool.flet.app]
-
-entrypoint = "main.py"
-
-# ------------------------------------------------------------
-# Android Configuration
-# ------------------------------------------------------------
+path = "."
+module = "main"
 
 [tool.flet.android]
-
-adaptive_icon_background = "#1B5E20"
-
 min_sdk_version = 24
 
-# Build one APK compatible with supported Android architectures
-split_per_abi = false
-
-# ------------------------------------------------------------
-# Android Permissions
-# ------------------------------------------------------------
-
 [tool.flet.android.permission]
-
 "android.permission.INTERNET" = true
-
 "android.permission.ACCESS_NETWORK_STATE" = true
-
-"android.permission.ACCESS_FINE_LOCATION" = true
-
-"android.permission.ACCESS_COARSE_LOCATION" = true
-
-"android.permission.CAMERA" = true
-
-"android.permission.READ_MEDIA_IMAGES" = true
-
-"android.permission.READ_MEDIA_VIDEO" = true
