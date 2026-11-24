@@ -1,4 +1,4 @@
-name: Build JaziraAgri APK
+name: Build JaziraAgri Mobile
 
 on:
   push:
@@ -10,14 +10,14 @@ permissions:
   contents: read
 
 concurrency:
-  group: jaziraagri-apk-${{ github.ref }}
+  group: jaziraagri-mobile-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build-apk:
-    name: Build Android APK
+  build-android:
+    name: Build Android APK and AAB
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
 
     steps:
       - name: Checkout repository
@@ -45,10 +45,21 @@ jobs:
       - name: Build APK
         run: flet build apk --verbose --python-version 3.12
 
-      - name: Upload APK artifact
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: jaziraagri-apk-${{ github.run_number }}
           path: build/apk/**/*.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Build AAB
+        run: flet build aab --verbose --python-version 3.12
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: jaziraagri-aab-${{ github.run_number }}
+          path: build/aab/**/*.aab
           if-no-files-found: error
           retention-days: 14
