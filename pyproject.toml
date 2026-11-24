@@ -38,3 +38,16 @@ min_sdk_version = 24
 [tool.flet.android.permission]
 "android.permission.INTERNET" = true
 "android.permission.ACCESS_NETWORK_STATE" = true
+
+[tool.flet]
+product = "Jazira Agri OS"
+company = "Husein"
+copyright = "Copyright (C) 2026 Husein Alfares"
+
+[tool.flet.app]
+path = "."
+module = "main"
+
+[tool.flet.android.permission]
+"android.permission.INTERNET" = true
+"android.permission.READ_MEDIA_IMAGES" = true
