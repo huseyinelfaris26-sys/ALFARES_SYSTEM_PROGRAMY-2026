@@ -1,37 +1,12 @@
-[build-system]
-requires = ["setuptools>=68", "wheel"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "jazira-agri-os"
 version = "1.1.0"
 description = "JaziraAgri agricultural management application"
 readme = "README.md"
 requires-python = ">=3.12"
-license = { text = "MIT" }
 
 authors = [
     { name = "Huseyin El Faris", email = "huseyinelfaris26@gmail.com" }
-]
-
-keywords = [
-    "agriculture",
-    "farming",
-    "flet",
-    "management",
-    "jazira"
-]
-
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "Intended Audience :: End Users/Desktop",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.12",
-    "Topic :: Office/Business",
-    "Topic :: Scientific/Engineering :: Agriculture"
 ]
 
 dependencies = [
@@ -45,24 +20,12 @@ dependencies = [
     "tqdm>=4.66.0"
 ]
 
-[project.urls]
-Homepage = "https://github.com/huseyinelfaris26-sys/JaziraAgri-OS"
-Repository = "https://github.com/huseyinelfaris26-sys/JaziraAgri-OS"
-Issues = "https://github.com/huseyinelfaris26-sys/JaziraAgri-OS/issues"
-
-[project.scripts]
-jaziraagri-os = "jazira_agri.main:main"
-
 [dependency-groups]
 dev = [
     "flet-cli",
     "flet-desktop",
     "flet-web"
 ]
-
-[tool.setuptools.packages.find]
-where = ["src"]
-include = ["jazira_agri*"]
 
 [tool.flet]
 org = "com.jaziraagri"
@@ -72,7 +35,7 @@ copyright = "Copyright (C) 2026 by JaziraAgri"
 
 [tool.flet.app]
 path = "src"
-module = "jazira_agri.main"
+module = "main"
 
 [tool.flet.android]
 min_sdk_version = 24
