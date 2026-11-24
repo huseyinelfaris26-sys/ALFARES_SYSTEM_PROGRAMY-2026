@@ -6,7 +6,33 @@ build-backend = "setuptools.build_meta"
 name = "jazira-agri-os"
 version = "1.1.0"
 description = "JaziraAgri agricultural management application"
+readme = "README.md"
 requires-python = ">=3.12"
+license = { text = "MIT" }
+
+authors = [
+    { name = "Huseyin El Faris", email = "huseyinelfaris26@gmail.com" }
+]
+
+keywords = [
+    "agriculture",
+    "farming",
+    "flet",
+    "management",
+    "jazira"
+]
+
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Office/Business",
+    "Topic :: Scientific/Engineering :: Agriculture"
+]
 
 dependencies = [
     "flet==1.1.3",
@@ -16,7 +42,22 @@ dependencies = [
     "Pillow>=10.3.0",
     "requests-oauthlib>=2.0.0",
     "requests-cache>=1.2.0",
-    "tqdm>=4.66.0",
+    "tqdm>=4.66.0"
+]
+
+[project.urls]
+Homepage = "https://github.com/huseyinelfaris26-sys/JaziraAgri-OS"
+Repository = "https://github.com/huseyinelfaris26-sys/JaziraAgri-OS"
+Issues = "https://github.com/huseyinelfaris26-sys/JaziraAgri-OS/issues"
+
+[project.scripts]
+jaziraagri-os = "jazira_agri.main:main"
+
+[dependency-groups]
+dev = [
+    "flet-cli",
+    "flet-desktop",
+    "flet-web"
 ]
 
 [tool.setuptools.packages.find]
@@ -27,10 +68,11 @@ include = ["jazira_agri*"]
 org = "com.jaziraagri"
 product = "JaziraAgri-OS"
 company = "JaziraAgri"
+copyright = "Copyright (C) 2026 by JaziraAgri"
 
 [tool.flet.app]
-path = "."
-module = "main"
+path = "src"
+module = "jazira_agri.main"
 
 [tool.flet.android]
 min_sdk_version = 24
@@ -38,16 +80,3 @@ min_sdk_version = 24
 [tool.flet.android.permission]
 "android.permission.INTERNET" = true
 "android.permission.ACCESS_NETWORK_STATE" = true
-
-[tool.flet]
-product = "Jazira Agri OS"
-company = "Husein"
-copyright = "Copyright (C) 2026 Husein Alfares"
-
-[tool.flet.app]
-path = "."
-module = "main"
-
-[tool.flet.android.permission]
-"android.permission.INTERNET" = true
-"android.permission.READ_MEDIA_IMAGES" = true
