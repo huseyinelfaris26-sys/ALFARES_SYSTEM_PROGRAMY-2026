@@ -1,1 +1,0 @@
-JaziraAgri-OS/assets
