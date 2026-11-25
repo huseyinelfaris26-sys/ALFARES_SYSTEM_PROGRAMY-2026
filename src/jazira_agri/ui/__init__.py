@@ -1,2 +1,0 @@
-# JaziraAgri-OS UI Package
-
