@@ -1,7 +1,7 @@
 # ALFARES_SYSTEM.PROGRAMY - المشروع رقم 1 بالعالم - 2026
 ## أضخم مشروع زراعي ذكي - جاهز شغال
 
-### كيف تشغل بدون ما تشتري شي
+### كيف تشغل بدون الأجهزة والمعدات 
 1. Flutter: افتح flutter_app في Android Studio -> Run
 2. Python: pip install -r python_backend/requirements.txt -> streamlit run python_backend/app.py
 3. ESP32: ارفع esp32/alfares_robot.ino لما تشتري القطع
