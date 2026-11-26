@@ -1,3 +1,18 @@
+![ALFARES Logo](assets/logo.png)
+
+# 🌾 ALFARES_SYSTEM.PROGRAMY - 2026
+### المشروع الزراعي الذكي رقم 1 بالعالم
+
+![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
+![Flutter](https://img.shields.io/badge/Flutter-3.27-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.12-yellow.svg)
+![ESP32](https://img.shields.io/badge/ESP32-IoT-red.svg)
+![Drone](https://img.shields.io/badge/Drone-DJI_T50_T100-orange.svg)
+
+> روبوت + درون + أقمار صناعية + طقس + صرف + بحث
+> زر واحد يشغل الروبوت الحقيقي من جوالك
+
+---
 # ALFARES_SYSTEM.PROGRAMY - المشروع رقم 1 بالعالم - 2026
 ## أضخم مشروع زراعي ذكي - جاهز شغال
 
