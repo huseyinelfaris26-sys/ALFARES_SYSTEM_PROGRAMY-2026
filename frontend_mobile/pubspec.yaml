@@ -1,0 +1,10 @@
+flutter:
+
+  uses-material-design: true
+
+  assets:
+    - assets/images/logo.png
+    - assets/images/wheat_field.jpg
+    - assets/images/disease_bg.jpg
+    - assets/images/satellite_bg.jpg
+    - assets/images/robot_bg.jpg
