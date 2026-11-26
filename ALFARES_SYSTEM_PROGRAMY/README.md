@@ -6,7 +6,7 @@
 2. Python: pip install -r python_backend/requirements.txt -> streamlit run python_backend/app.py
 3. ESP32: ارفع esp32/alfares_robot.ino لما تشتري القطع
 
-### لما تشتري القطع بعدين
+### الأجهزة والمعدات  
 - الدرون: DJI Agras T100 (100L) او T50 (40L)
 - الحساسات: SenseCAP S2105 + Ecowitt WH51
 - العقل: ESP32-S3 + Raspberry Pi 5
