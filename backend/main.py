@@ -2,8 +2,8 @@ from fastapi import FastAPI
 
 from routers.weather import router as weather_router
 from routers.disease import router as disease_router
-from routers.satellite import router as satellite_router
 from routers.eppo import router as eppo_router
+from routers.satellite import router as satellite_router
 
 app = FastAPI(
     title="ALFARES AI API",
@@ -12,8 +12,9 @@ app = FastAPI(
 
 app.include_router(weather_router)
 app.include_router(disease_router)
-app.include_router(satellite_router)
 app.include_router(eppo_router)
+app.include_router(satellite_router)
+
 
 @app.get("/")
 def root():
@@ -24,5 +25,16 @@ def root():
         "ALFARES_SYSTEM_PROGRAMY-2026",
 
         "status":
-        "online"
+        "online",
+
+        "modules": [
+
+            "weather",
+
+            "disease",
+
+            "eppo",
+
+            "satellite"
+        ]
     }
