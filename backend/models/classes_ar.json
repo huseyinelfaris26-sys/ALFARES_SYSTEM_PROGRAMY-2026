@@ -87,6 +87,128 @@
     "english": "red spider",
     "arabic": "العنكبوت الأحمر"
   },
+  {
+  "31": {
+    "english": "wheat blossom midge",
+    "arabic": "بعوضة أزهار القمح"
+  },
+  "32": {
+    "english": "penthaleus major",
+    "arabic": "penthaleus major"
+  },
+  "33": {
+    "english": "longlegged spider mite",
+    "arabic": "العنكبوت الأحمر طويل الأرجل"
+  },
+  "34": {
+    "english": "wheat phloeothrips",
+    "arabic": "تربس القمح"
+  },
+  "35": {
+    "english": "wheat sawfly",
+    "arabic": "ذبابة منشار القمح"
+  },
+  "36": {
+    "english": "cerodonta denticornis",
+    "arabic": "cerodonta denticornis"
+  },
+  "37": {
+    "english": "beet fly",
+    "arabic": "ذبابة البنجر"
+  },
+  "38": {
+    "english": "flea beetle",
+    "arabic": "خنفساء البراغيث"
+  },
+  "39": {
+    "english": "cabbage army worm",
+    "arabic": "دودة الحشد للكرنب"
+  },
+  "40": {
+    "english": "beet army worm",
+    "arabic": "دودة حشد البنجر"
+  },
+  "41": {
+    "english": "Beet spot flies",
+    "arabic": "ذباب بقع البنجر"
+  },
+  "42": {
+    "english": "meadow moth",
+    "arabic": "عثة المروج"
+  },
+  "43": {
+    "english": "beet weevil",
+    "arabic": "سوسة البنجر"
+  },
+  "44": {
+    "english": "sericaorient alismots chulsky",
+    "arabic": "sericaorient alismots chulsky"
+  },
+  "45": {
+    "english": "alfalfa weevil",
+    "arabic": "سوسة البرسيم"
+  },
+  "46": {
+    "english": "flax budworm",
+    "arabic": "دودة براعم الكتان"
+  },
+  "47": {
+    "english": "alfalfa plant bug",
+    "arabic": "بق البرسيم"
+  },
+  "48": {
+    "english": "tarnished plant bug",
+    "arabic": "البق النباتي المشوه"
+  },
+  "49": {
+    "english": "Locustoidea",
+    "arabic": "الجراد"
+  },
+  "50": {
+    "english": "lytta polita",
+    "arabic": "lytta polita"
+  },
+  "51": {
+    "english": "legume blister beetle",
+    "arabic": "خنفساء البثور البقولية"
+  },
+  "52": {
+    "english": "blister beetle",
+    "arabic": "خنفساء البثور"
+  },
+  "53": {
+    "english": "therioaphis maculata Buckton",
+    "arabic": "therioaphis maculata Buckton"
+  },
+  "54": {
+    "english": "odontothrips loti",
+    "arabic": "odontothrips loti"
+  },
+  "55": {
+    "english": "Thrips",
+    "arabic": "التربس"
+  },
+  "56": {
+    "english": "alfalfa seed chalcid",
+    "arabic": "دبور بذور البرسيم"
+  },
+  "57": {
+    "english": "Pieris canidia",
+    "arabic": "Pieris canidia"
+  },
+  "58": {
+    "english": "Apolygus lucorum",
+    "arabic": "Apolygus lucorum"
+  },
+  "59": {
+    "english": "Limacodidae",
+    "arabic": "Limacodidae"
+  },
+  "60": {
+    "english": "Viteus vitifoliae",
+    "arabic": "فيلوكسيرا العنب"
+  }
+}
   "23": {
     "english": "corn borer",
     "arabic": "حفار الذرة"
