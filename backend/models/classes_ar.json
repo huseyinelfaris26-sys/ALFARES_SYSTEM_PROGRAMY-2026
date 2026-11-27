@@ -1,7 +1,122 @@
 {
-  "1": {"english":"rice leaf roller","arabic":"لفافة أوراق الأرز"},
-  "2": {"english":"rice leaf caterpillar","arabic":"يرقة أوراق الأرز"},
-  "3": {"english":"paddy stem maggot","arabic":"ذبابة ساق الأرز"},
-  "4": {"english":"asiatic rice borer","arabic":"حفار الأرز الآسيوي"},
-  "5": {"english":"yellow rice borer","arabic":"حفار الأرز الأصفر"}
+  "1": {
+    "english": "rice leaf roller",
+    "arabic": "لفافة أوراق الأرز"
+  },
+  "2": {
+    "english": "rice leaf caterpillar",
+    "arabic": "يرقة أوراق الأرز"
+  },
+  "3": {
+    "english": "paddy stem maggot",
+    "arabic": "ذبابة ساق الأرز"
+  },
+  "4": {
+    "english": "asiatic rice borer",
+    "arabic": "حفار الأرز الآسيوي"
+  },
+  "5": {
+    "english": "yellow rice borer",
+    "arabic": "حفار الأرز الأصفر"
+  },
+  "6": {
+    "english": "rice gall midge",
+    "arabic": "بعوضة أورام الأرز"
+  },
+  "7": {
+    "english": "Rice Stemfly",
+    "arabic": "ذبابة ساق الأرز"
+  },
+  "8": {
+    "english": "brown plant hopper",
+    "arabic": "نطاط النبات البني"
+  },
+  "9": {
+    "english": "white backed plant hopper",
+    "arabic": "نطاط النبات ذو الظهر الأبيض"
+  },
+  "10": {
+    "english": "small brown plant hopper",
+    "arabic": "نطاط النبات البني الصغير"
+  },
+  "11": {
+    "english": "rice water weevil",
+    "arabic": "سوسة ماء الأرز"
+  },
+  "12": {
+    "english": "rice leafhopper",
+    "arabic": "نطاط أوراق الأرز"
+  },
+  "13": {
+    "english": "grain spreader thrips",
+    "arabic": "تربس الحبوب"
+  },
+  "14": {
+    "english": "rice shell pest",
+    "arabic": "آفة قشرة الأرز"
+  },
+  "15": {
+    "english": "grub",
+    "arabic": "يرقة خنفساء"
+  },
+  "16": {
+    "english": "mole cricket",
+    "arabic": "صرصور الخلد"
+  },
+  "17": {
+    "english": "wireworm",
+    "arabic": "الدودة السلكية"
+  },
+  "18": {
+    "english": "white margined moth",
+    "arabic": "عثة بيضاء الحواف"
+  },
+  "19": {
+    "english": "black cutworm",
+    "arabic": "دودة الحشد السوداء"
+  },
+  "20": {
+    "english": "large cutworm",
+    "arabic": "دودة قارضة كبيرة"
+  },
+  "21": {
+    "english": "yellow cutworm",
+    "arabic": "دودة قارضة صفراء"
+  },
+  "22": {
+    "english": "red spider",
+    "arabic": "العنكبوت الأحمر"
+  },
+  "23": {
+    "english": "corn borer",
+    "arabic": "حفار الذرة"
+  },
+  "24": {
+    "english": "army worm",
+    "arabic": "دودة الحشد"
+  },
+  "25": {
+    "english": "aphids",
+    "arabic": "حشرة المن"
+  },
+  "26": {
+    "english": "Potosiabre vitarsis",
+    "arabic": "Potosiabre vitarsis"
+  },
+  "27": {
+    "english": "peach borer",
+    "arabic": "حفار الخوخ"
+  },
+  "28": {
+    "english": "english grain aphid",
+    "arabic": "من الحبوب الإنجليزي"
+  },
+  "29": {
+    "english": "green bug",
+    "arabic": "البق الأخضر"
+  },
+  "30": {
+    "english": "bird cherry-oataphid",
+    "arabic": "من الشوفان وكرز الطيور"
+  }
 }
