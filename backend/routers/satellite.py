@@ -2,11 +2,17 @@ from fastapi import APIRouter
 
 router = APIRouter()
 
-@router.get("/satellite")
 
-def satellite():
+@router.get("/satellite/ndvi")
+def ndvi():
 
     return {
-        "message":
-        "satellite running"
+
+        "formula":
+
+        "(NIR-RED)/(NIR+RED)",
+
+        "status":
+
+        "ready"
     }
