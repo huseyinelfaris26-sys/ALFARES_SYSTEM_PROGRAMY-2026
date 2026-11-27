@@ -1,12 +1,13 @@
 from fastapi import APIRouter
 
+from services.weather_service import (
+    get_weather
+)
+
 router = APIRouter()
 
-@router.get("/weather")
 
+@router.get("/weather")
 def weather():
 
-    return {
-        "message":
-        "weather api running"
-    }
+    return get_weather()
